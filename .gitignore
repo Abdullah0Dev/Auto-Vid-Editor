@@ -1,0 +1,200 @@
+# ─────────────────────────────────────────────
+# MODELS — the big offenders (5+ GB each)
+# ─────────────────────────────────────────────
+models/
+*.bin
+*.gguf
+*.safetensors
+*.mlx
+*.npz
+*.ckpt
+*.pth
+*.onnx
+*.msgpack
+whisper-*-mlx/
+whisper-*-merged/
+Qwen*/
+mlx-community/
+mlx_model/
+
+# ─────────────────────────────────────────────
+# MEDIA INPUT — your source recordings
+# ─────────────────────────────────────────────
+input/
+!input/.gitkeep
+
+# ─────────────────────────────────────────────
+# AUDIO / VIDEO ASSETS — bg music, nasheed
+# These are copyrighted or large
+# ─────────────────────────────────────────────
+assets/bg_music/*
+assets/nasheed/*
+assets/fonts/*
+!assets/bg_music/.gitkeep
+!assets/nasheed/.gitkeep
+!assets/fonts/.gitkeep
+
+# But KEEP small example files that ship with the repo
+!assets/**/*.README.md
+!assets/**/*.example
+
+# ─────────────────────────────────────────────
+# OUTPUT — all generated content
+# ─────────────────────────────────────────────
+output/
+!output/.gitkeep
+
+# ─────────────────────────────────────────────
+# WORKSPACE — temp files
+# ─────────────────────────────────────────────
+workspace/
+!workspace/.gitkeep
+
+# ─────────────────────────────────────────────
+# ARTIFACTS — fbu traces
+# ─────────────────────────────────────────────
+artifacts/
+*.trace
+*_trace.json
+*.har
+
+# ─────────────────────────────────────────────
+# CACHES — model downloads
+# ─────────────────────────────────────────────
+.cache/
+.huggingface/
+# If you ever set HF_HOME inside the project:
+hf_cache/
+hf_models/
+
+# ─────────────────────────────────────────────
+# PYTHON
+# ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.conda/
+.python-version
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# Type checkers / linters
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pytype/
+
+# ─────────────────────────────────────────────
+# NODE / JS (if you ever add Remotion or a frontend)
+# ─────────────────────────────────────────────
+node_modules/
+.next/
+out/
+.turbo/
+dist/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─────────────────────────────────────────────
+# MACOS
+# ─────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.DocumentRevisions-V100
+.TemporaryItems
+.apdisk
+
+# ─────────────────────────────────────────────
+# EDITORS / IDE
+# ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.history/
+
+# ─────────────────────────────────────────────
+# ENV / SECRETS
+# ─────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets.json
+credentials.json
+
+# ─────────────────────────────────────────────
+# LOGS
+# ─────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─────────────────────────────────────────────
+# FFMPEG TEMP FILES
+# ─────────────────────────────────────────────
+ffmpeg2pass-*.log
+*.ts
+*.m3u8
+
+# ─────────────────────────────────────────────
+# PLAYWRIGHT / BROWSER CACHE (used by fbu)
+# ─────────────────────────────────────────────
+.playwright/
+chromium/
+chrome-linux/
+ms-playwright/
+
+# ─────────────────────────────────────────────
+# UV / PYENV
+# ─────────────────────────────────────────────
+.uv/
+uv.lock
+.python-version
