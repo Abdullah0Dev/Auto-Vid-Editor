@@ -11,7 +11,9 @@ OUTPUT_DIR = ROOT / "output"
 ASSETS_DIR = ROOT / "assets"
 WORKSPACE_DIR = ROOT / "workspace"
 MODELS_DIR = ROOT / "models"
-
+# --- Asset search ---
+SEARCH_QUERY_PREFERENCE = "arabic"   # "arabic" | "english" | "both"
+SEARCH_FALLBACK_TO_ENGLISH = True    # if Arabic returns nothing, try English
 BG_MUSIC_DIR = ASSETS_DIR / "bg_music"
 NASHEED_DIR = ASSETS_DIR / "nasheed"
 # --- Debug / verbosity ---
