@@ -2,33 +2,41 @@
 import time
 from pathlib import Path
 
-from config import FINAL_DIR
-from pipeline import (transcriber, scene_planner, asset_finder,
-                      vision_judge, audio_analyzer, clip_builder, renderer)
-from models.types import Scene
+from config import FINAL_DIR, MODEL_VISION
+from pipeline import (
+    transcriber, context_extractor, scene_planner, query_generator,
+    asset_finder, vision_judge, audio_analyzer, clip_builder, renderer,
+)
 from utils.logger import log
 from utils.ollama_client import unload
-from config import MODEL_VISION
+
+
+TOTAL_STEPS = 7
+
 
 def run(video_path: str, bg_music: str | None = None,
         nasheed: str | None = None) -> str:
     t0 = time.time()
     FINAL_DIR.mkdir(parents=True, exist_ok=True)
 
-    log.step(1, 6, "Transcribing (mlx-whisper)")
+    log.step(1, TOTAL_STEPS, "Transcribing (mlx-whisper)")
     log.info(f"Input: {video_path}")
     segments = transcriber.transcribe(video_path)
     transcript_text = transcriber.to_timestamped_text(segments)
-    log.info(f"Transcript length: {len(transcript_text)} chars")
 
-    log.step(2, 6, "Planning scenes (Command R7B Arabic)")
-    scenes, moments = scene_planner.plan(transcript_text)
+    log.step(2, TOTAL_STEPS, "Extracting global context")
+    context = context_extractor.extract_context(transcript_text)
+
+    log.step(3, TOTAL_STEPS, "Planning scenes")
+    scenes, moments = scene_planner.plan(transcript_text, context=context)
     log.info(f"Scenes: {[s.id for s in scenes]}")
 
-    log.step(3, 6, "Analyzing audio")
+    log.step(4, TOTAL_STEPS, "Refining search queries")
+    scenes = query_generator.generate_queries(scenes, context)
+
+    log.step(5, TOTAL_STEPS, "Analyzing audio + searching assets")
     audio_analyzer.analyze(video_path)
 
-    log.step(4, 6, "Searching + evaluating assets")
     for i, scene in enumerate(scenes, 1):
         if scene.visual_type not in ("image", "graphic"):
             log.info(f"Scene {scene.id}: skip (visual_type={scene.visual_type})")
@@ -37,13 +45,14 @@ def run(video_path: str, bg_music: str | None = None,
         scene.candidates = asset_finder.find_assets(scene)
         log.info(f"  → {len(scene.candidates)} candidates")
         scene.chosen_asset = vision_judge.judge(scene)
-        log.info(f"  → chosen: {Path(scene.chosen_asset).name if scene.chosen_asset else 'none'}")
+        chosen_name = Path(scene.chosen_asset).name if scene.chosen_asset else "none"
+        log.info(f"  → chosen: {chosen_name}")
         unload(MODEL_VISION)
 
-    log.step(5, 6, "Building clips")
+    log.step(6, TOTAL_STEPS, "Building clips")
     clip_paths = clip_builder.build_all(video_path, scenes)
 
-    log.step(6, 6, "Rendering final video")
+    log.step(7, TOTAL_STEPS, "Rendering final video")
     output_path = str(FINAL_DIR / "final_video.mp4")
     renderer.render(
         clip_paths=clip_paths,

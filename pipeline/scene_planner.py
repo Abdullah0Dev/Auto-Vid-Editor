@@ -1,9 +1,10 @@
-"""Step 2 — Scene planning, query generation, and translation."""
+"""Step 2 — Scene segmentation with global context."""
 import json
 import re
 
 from config import MODEL_ORCHESTRATOR, PLAN_DIR
 from models.types import Scene, ImportantMoment
+from pipeline.context_extractor import format_context_for_prompt
 from utils.ollama_client import chat
 from utils.logger import log
 
@@ -12,82 +13,75 @@ CHUNK_SECONDS = 60
 MIN_SCENE_DURATION = 8.0
 MAX_SCENE_DURATION = 15.0
 
-
-# Strings the model copies verbatim from the prompt schema.
 PLACEHOLDER_STRINGS = [
     "وصف بحث بالعربية",
     "English translation of the search query",
     "النص الأصلي هنا",
     "العبارة المهمة",
-    "low ambient music",       # This one is OK to keep — it's a valid default
-    "English translation",
-    "search query",
-    "...",
 ]
 
 
-SYSTEM_PROMPT = """أنت مدير تصوير ومونتاج لفيديوهات تاريخية عربية.
+SYSTEM_PROMPT = """You are a film editor planning scenes for an Arabic historical documentary.
 
-مهمتك: قسّم النص المفرّغ إلى مشاهد، وأعد النتيجة على شكل JSON صالح فقط.
+You will receive GLOBAL CONTEXT about the whole video and a CHUNK of transcript.
+Segment the chunk into scenes and return valid JSON only.
 
-⚠️ الأهم: english_query و arabic_query هما أوامر بحث عن صور، وليسا وصفاً للتعليق الصوتي.
-
-أمثلة على أوامر بحث سيئة (لا تفعل هذا):
-- "Voiceover in Arabic" — هذا وصف لما يفعله الراوي، ليس بحثاً عن صورة
-- "Author's biography" — عام جداً، لن يجلب نتيجة
-- "تعريف المؤلف" — وصف للنص، ليس بحثاً عن صورة
-
-أمثلة على أوامر بحث جيدة (افعل هذا):
-- "Al-Dhahabi historian manuscript" — يذكر اسم الشخصية
-- "medieval Damascus mosque architecture" — يذكر المكان المحدد
-- "Islamic golden age scholar portrait" — يذكر الحقبة والموضوع
-- "old Arabic manuscript pages" — يذكر نوع الصورة المطلوبة
-
-قواعد صارمة:
-- أعد JSON فقط. لا تكتب أي شرح.
-- لا تستخدم ``` أو markdown.
-- استخرج الأسماء والأماكن والتواريخ من النص واذكرها في queries.
-- إذا ذكر النص "الذهبي" أو "سير أعلام النبلاء" أو "تاريخ الإسلام"، فليكن البحث عن "Al-Dhahabi" و "Tarikh al-Islam manuscript" وليس "Author biography".
-- **جمّع 2-4 أسطر متتالية في مشهد واحد** إذا كانت مدتها أقل من 5 ثوانٍ.
-- اجعل كل مشهد بين 5 و 15 ثانية.
-- ken_burns: zoom_in, zoom_out, pan_left, pan_right.
-- is_important = true للعبارات الحماسية أو المؤثرة.
-- إذا لم توجد لحظات مهمة، أعد "important_moments": [].
-
-شكل JSON:
+JSON schema:
 {
   "scenes": [
     {
       "id": 1,
       "start": 0.0,
       "end": 8.0,
-      "text": "النص الأصلي",
+      "text": "original transcript text",
       "visual_type": "image",
-      "arabic_query": "بحث بالعربية يذكر أسماء وأماكن محددة",
-      "english_query": "Specific image search with names and places",
+      "arabic_query": "بحث بالعربية (املأها بقيم حقيقية)",
+      "english_query": "English image search query",
       "audio_note": "low ambient music",
       "is_important": false,
       "ken_burns": "zoom_in"
     }
   ],
   "important_moments": []
-}"""
+}
 
-USER_PROMPT = """هذا المقطع يغطي الفترة الزمنية من {chunk_start:.1f} إلى {chunk_end:.1f} ثانية من الفيديو الأصلي.
+Strict rules:
+- Return JSON only. No commentary, no markdown fences.
+- ⚠️ The schema strings above are EXAMPLES. Replace them with real content.
+- Group 2-4 consecutive short transcript lines into ONE scene.
+- Each scene: 5-15 seconds.
+- is_important = true for دعاء، رثاء، تعجب، or dramatic turning points.
+- ken_burns: one of zoom_in, zoom_out, pan_left, pan_right.
 
-النص المفرّغ:
+For queries — remember these are IMAGE search terms:
+- ❌ BAD: "Allah is the best disposer of affairs" (a prayer, not an image)
+- ✅ GOOD: "Islamic prayer manuscript page"
+- ❌ BAD: "Author biography, born 673"
+- ✅ GOOD: "medieval Islamic scholar portrait"
+- ❌ BAD: "Imam Muhammad ibn Ahmad"
+- ✅ GOOD: "13th century Damascus mosque architecture"
+
+If the scene is emotional/abstract, use MOOD queries: "candlelit mosque interior", "old Arabic manuscript on wooden table", "desert caravan at sunset".
+Use the GLOBAL CONTEXT to anchor queries in the correct era, region, and entities."""
+
+
+USER_PROMPT = """GLOBAL CONTEXT:
+{context}
+
+CHUNK TIMING: this chunk covers {chunk_start:.1f}s to {chunk_end:.1f}s.
+
+TRANSCRIPT:
 {transcript}
 
-قواعد صارمة لهذا المقطع:
-- استخدم الأزمنة (start/end) الموجودة بين الأقواس في النص كما هي.
-- كل قيم start و end يجب أن تكون بين {chunk_start:.1f} و {chunk_end:.1f}.
-- املأ الحقول بقيم حقيقية من النص. لا تنسخ الأمثلة.
+Use start/end timestamps between {chunk_start:.1f} and {chunk_end:.1f}. Do not restart at 0.
 
-أعد JSON فقط."""
+Return JSON only."""
 
 
-def plan(transcript_text: str) -> tuple[list[Scene], list[ImportantMoment]]:
+def plan(transcript_text: str, context: dict | None = None) -> tuple[list[Scene], list[ImportantMoment]]:
     PLAN_DIR.mkdir(parents=True, exist_ok=True)
+
+    context_str = format_context_for_prompt(context or {})
 
     chunks = _chunk_transcript(transcript_text, CHUNK_SECONDS)
     log.info(f"Planning {len(chunks)} chunk(s) with {MODEL_ORCHESTRATOR}...")
@@ -104,6 +98,7 @@ def plan(transcript_text: str) -> tuple[list[Scene], list[ImportantMoment]]:
             [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": USER_PROMPT.format(
+                    context=context_str,
                     chunk_start=c_start,
                     chunk_end=c_end,
                     transcript=chunk_text,
@@ -112,16 +107,14 @@ def plan(transcript_text: str) -> tuple[list[Scene], list[ImportantMoment]]:
             label=f"Scene Planner [{i}/{len(chunks)}]",
         )
 
-        raw_content = result.get("message", {}).get("content", "")
-        (PLAN_DIR / f"raw_chunk_{i:02d}.txt").write_text(
-            raw_content or "<EMPTY>", encoding="utf-8"
-        )
+        raw = result.get("message", {}).get("content", "")
+        (PLAN_DIR / f"raw_chunk_{i:02d}.txt").write_text(raw or "<EMPTY>", encoding="utf-8")
 
-        if not raw_content.strip():
+        if not raw.strip():
             log.warn(f"Chunk {i}: empty response — skipping")
             continue
 
-        parsed = _try_parse_json(raw_content)
+        parsed = _try_parse_json(raw)
         if parsed is None:
             log.warn(f"Chunk {i}: invalid JSON — skipping")
             continue
@@ -135,18 +128,15 @@ def plan(transcript_text: str) -> tuple[list[Scene], list[ImportantMoment]]:
     all_scenes.sort(key=lambda s: s.start)
     all_scenes = _sanitize_scenes(all_scenes)
     all_scenes = _merge_short_scenes(all_scenes)
-
     for idx, s in enumerate(all_scenes, start=1):
         s.id = idx
 
-    # Sanitize moments too — drop placeholder ones
     all_moments = [
         m for m in all_moments
         if m.start < m.end and m.text and not _is_placeholder(m.text)
     ]
 
     if not all_scenes:
-        log.error("No valid scenes after post-processing.")
         raise RuntimeError("Scene planning produced no scenes")
 
     (PLAN_DIR / "scene_plan.json").write_text(
@@ -161,6 +151,7 @@ def plan(transcript_text: str) -> tuple[list[Scene], list[ImportantMoment]]:
     log.ok(f"Final: {len(all_scenes)} scenes, {len(all_moments)} moments")
     return all_scenes, all_moments
 
+ 
 
 def _is_placeholder(text: str) -> bool:
     """Return True if a string is one of the schema examples."""

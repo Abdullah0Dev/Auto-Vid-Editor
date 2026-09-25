@@ -16,6 +16,12 @@ SEARCH_QUERY_PREFERENCE = "arabic"   # "arabic" | "english" | "both"
 SEARCH_FALLBACK_TO_ENGLISH = True    # if Arabic returns nothing, try English
 BG_MUSIC_DIR = ASSETS_DIR / "bg_music"
 NASHEED_DIR = ASSETS_DIR / "nasheed"
+# --- Recording fallback appearance ---
+RECORDING_FALLBACK_INNER_W = 1344
+RECORDING_FALLBACK_INNER_H = 756
+RECORDING_FALLBACK_BORDER = 6
+RECORDING_FALLBACK_BORDER_COLOR = "0x2a2a4e"
+RECORDING_FALLBACK_BG_COLOR = "0x0a0a1a"
 # --- Debug / verbosity ---
 STREAM_OUTPUT = True    # print model tokens live as they arrive
 # Default input video (used if none passed via CLI)
@@ -31,7 +37,7 @@ FINAL_DIR = OUTPUT_DIR / "final"
 # --- Ollama ---
 OLLAMA_BASE = "http://localhost:11434"
 MODEL_ORCHESTRATOR = "command-r7b-arabic:7b"
-MODEL_VISION = "qwen2.5vl:7b"
+MODEL_VISION = "qwen3-vl:8b"
 MODEL_KEEP_ALIVE = 0          # unload immediately after each call
 
 # --- Whisper (MLX, Apple Silicon) ---
@@ -62,3 +68,5 @@ NASHEED_VOLUME = 0.35
 
 # --- Fallbacks ---
 VISION_FALLBACK_TO_FIRST = True   # if vision judge fails, pick first image
+ENABLE_FBU_FALLBACK = False    # slow (~45s per call); enable only when needed
+FBU_TIMEOUT = 45

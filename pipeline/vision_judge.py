@@ -1,40 +1,63 @@
-"""Step 4 — Pick the best image using Qwen2.5-VL."""
+"""Step 4 — Pick the best image using Qwen3-VL."""
 import base64
+import re
+
 from config import MODEL_VISION, VISION_FALLBACK_TO_FIRST
 from models.types import Scene
 from utils.ollama_client import chat
 from utils.logger import log
 
 
-PROMPT_TEMPLATE = """أنت مساعد مونتاج لفيديو تاريخي عربي.
+PROMPT_TEMPLATE = """You are an expert visual researcher for an Arabic historical documentary.
 
-وصف المشهد:
+SCENE CONTEXT (from the narration):
 {scene_text}
 
-البحث المطلوب: {arabic_query}
+SEARCH INTENT (what we were looking for):
+{english_query}
 
-شروط الاستبعاد:
-- تخطَّ الصور ذات العلامات المائية أو النصوص الواضحة
-- تخطَّ الصور الحديثة أو غير التاريخية
-- تخطَّ الصور منخفضة الجودة
+EXCLUSION RULES — reject any image that:
+- Contains watermarks, logos, or prominent text overlays
+- Is clearly modern (cars, contemporary clothing, modern buildings)
+- Is low quality (blurry, pixelated, heavily compressed)
+- Shows a wrong subject (unrelated to the search intent)
+- Contains graphic violence or disturbing content
 
-المهمة:
-1. صف كل صورة بإيجاز.
-2. حدد أي صورة تنتهك الشروط.
-3. اختر الأفضل.
-4. إن لم تناسب أي صورة، أجب بـ NONE.
+CANDIDATE IMAGES: You are looking at {n_images} images labeled A, B, C (in order).
 
-أخرج فقط الحرف (A/B/C/NONE) وسبباً في جملة."""
+TASK:
+1. Briefly describe what each image shows.
+2. State whether each image violates any exclusion rule.
+3. Choose the single best image that matches the historical scene.
+4. If NONE of them fit, say NONE.
+
+Respond in EXACTLY this format, nothing else:
+
+IMAGE A: [one-sentence description] | Violates: YES/NO
+IMAGE B: [one-sentence description] | Violates: YES/NO
+IMAGE C: [one-sentence description] | Violates: YES/NO
+BEST: [A/B/C/NONE]
+REASON: [one short sentence]"""
 
 
 def judge(scene: Scene) -> str:
+    """Evaluate candidates and return the path of the best image, or ''."""
     if not scene.candidates:
         return ""
 
+    n = len(scene.candidates)
+    # Pad the template so the letters label matches reality
+    letters = ["A", "B", "C"][:n]
+
     images = [_b64(p) for p in scene.candidates]
+
     prompt = PROMPT_TEMPLATE.format(
-        scene_text=scene.text, arabic_query=scene.arabic_query
+        scene_text=scene.text,
+        english_query=scene.english_query or scene.arabic_query,
+        n_images=n,
     )
+
+    log.info(f"Scene {scene.id}: evaluating {n} candidate(s)...")
 
     try:
         result = chat(
@@ -43,20 +66,67 @@ def judge(scene: Scene) -> str:
             label=f"Vision (scene {scene.id})",
         )
         answer = result["message"]["content"].strip()
-        log.debug(f"Vision: {answer[:100]}")
+        log.info(f"  → verdict preview: {answer[:200].replace(chr(10), ' | ')}")
 
-        for letter in ("A", "B", "C"):
-            if answer.upper().startswith(letter):
-                idx = ord(letter) - ord("A")
-                if idx < len(scene.candidates):
-                    return scene.candidates[idx]
+        chosen_idx = _parse_verdict(answer, n)
+        if chosen_idx is not None:
+            chosen = scene.candidates[chosen_idx]
+            log.ok(f"  → chose candidate {letters[chosen_idx]}: "
+                   f"{chosen.split('/')[-1]}")
+            return chosen
 
-        if "NONE" in answer.upper():
+        if re.search(r"\bNONE\b", answer, re.IGNORECASE):
+            log.warn(f"  → model said NONE for scene {scene.id}")
             return ""
-    except Exception as e:
-        log.warn(f"Vision judge failed: {e}")
 
-    return scene.candidates[0] if VISION_FALLBACK_TO_FIRST else ""
+        log.warn(f"  → could not parse verdict, using fallback")
+
+    except Exception as e:
+        log.warn(f"Vision judge failed for scene {scene.id}: {e}")
+
+    # Fallback: first candidate
+    if VISION_FALLBACK_TO_FIRST and scene.candidates:
+        log.info(f"  → fallback to first candidate")
+        return scene.candidates[0]
+
+    return ""
+
+
+def _parse_verdict(answer: str, n_images: int) -> int | None:
+    """
+    Extract the chosen letter (A/B/C) from the model's response.
+    Returns the zero-based index, or None if NONE/unparseable.
+    """
+    # Primary: look for "BEST: X"
+    m = re.search(r"BEST\s*:\s*([A-C])", answer, re.IGNORECASE)
+    if m:
+        idx = ord(m.group(1).upper()) - ord("A")
+        if 0 <= idx < n_images:
+            return idx
+        return None
+
+    # Secondary: look for "BEST: NONE"
+    if re.search(r"BEST\s*:\s*NONE", answer, re.IGNORECASE):
+        return None
+
+    # Tertiary: find the last standalone "A"/"B"/"C" mentioned after "BEST"
+    best_pos = answer.upper().find("BEST")
+    if best_pos != -1:
+        tail = answer[best_pos:]
+        letters_found = re.findall(r"\b([A-C])\b", tail)
+        if letters_found:
+            idx = ord(letters_found[0].upper()) - ord("A")
+            if 0 <= idx < n_images:
+                return idx
+
+    # Quaternary: whole answer is a single letter
+    stripped = answer.strip().upper()
+    if len(stripped) == 1 and stripped in "ABC":
+        idx = ord(stripped) - ord("A")
+        if idx < n_images:
+            return idx
+
+    return None
 
 
 def _b64(path: str) -> str:
