@@ -4,3 +4,5 @@ pydantic>=2.0.0
 rich>=13.0.0
 python-dotenv>=1.0.0
 mlx-whisper>=0.4.0
+pinterest-dl>=0.3.2
+flask>=3.0.0

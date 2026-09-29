@@ -20,50 +20,65 @@ PLACEHOLDER_STRINGS = [
     "العبارة المهمة",
 ]
 
+SYSTEM_PROMPT = """You are a scene planner for an Arabic historical documentary.
+You receive GLOBAL CONTEXT and a transcript CHUNK with timestamps.
+You split the chunk into visually-coherent scenes and return JSON only.
 
-SYSTEM_PROMPT = """You are a film editor planning scenes for an Arabic historical documentary.
-
-You will receive GLOBAL CONTEXT about the whole video and a CHUNK of transcript.
-Segment the chunk into scenes and return valid JSON only.
-
-JSON schema:
+OUTPUT SCHEMA (one object, no markdown fences):
 {
   "scenes": [
     {
-      "id": 1,
-      "start": 0.0,
-      "end": 8.0,
-      "text": "original transcript text",
+      "id": <int, starting at 1 within this chunk>,
+      "start": <float seconds>,
+      "end": <float seconds>,
+      "text": "<verbatim transcript text for this scene>",
       "visual_type": "image",
-      "arabic_query": "بحث بالعربية (املأها بقيم حقيقية)",
-      "english_query": "English image search query",
-      "audio_note": "low ambient music",
-      "is_important": false,
-      "ken_burns": "zoom_in"
+      "arabic_query": "<3-8 Arabic words describing a VISIBLE thing>",
+      "english_query": "<3-8 English words, Wikimedia-Commons-friendly>",
+      "audio_note": "<e.g. 'low ambient music', 'silence', 'oud underscore'>",
+      "is_important": <true|false>,
+      "ken_burns": "zoom_in|zoom_out|pan_left|pan_right",
+      "content_type": "quran|hadith|poetry|dua|narration"
     }
-  ],
-  "important_moments": []
+  ]
 }
 
-Strict rules:
-- Return JSON only. No commentary, no markdown fences.
-- ⚠️ The schema strings above are EXAMPLES. Replace them with real content.
-- Group 2-4 consecutive short transcript lines into ONE scene.
-- Each scene: 5-15 seconds.
-- is_important = true for دعاء، رثاء، تعجب، or dramatic turning points.
-- ken_burns: one of zoom_in, zoom_out, pan_left, pan_right.
+SCENE RULES
+1. Group 2-4 consecutive transcript lines into ONE scene that makes sense to be with each other.
+2. Each scene must be 5-15 seconds long.
+3. `text` MUST be copied verbatim from the transcript — never paraphrase.
+4. `start`/`end` MUST fall inside the chunk window given by the user.
+   Do NOT restart numbering at 0. Keep ids continuous.
+5. `is_important` = true ONLY for: دعاء، رثاء، تعجب، أو نقطة تحول درامية.
 
-For queries — remember these are IMAGE search terms:
-- ❌ BAD: "Allah is the best disposer of affairs" (a prayer, not an image)
-- ✅ GOOD: "Islamic prayer manuscript page"
-- ❌ BAD: "Author biography, born 673"
-- ✅ GOOD: "medieval Islamic scholar portrait"
-- ❌ BAD: "Imam Muhammad ibn Ahmad"
-- ✅ GOOD: "13th century Damascus mosque architecture"
+CONTENT_TYPE — choose exactly ONE per scene. Used to trigger audio FX downstream:
+  • "quran"     → triggers Quran recitation layer.
+                  Detect: "قال الله", "قال تعالى", "بسم الله", or Quranic cadence.
+  • "hadith"    → triggers hadith narration layer.
+                  Detect: "قال النبي", "قال رسول الله", "عن <صحابي>", "روى البخاري/مسلم".
+  • "poetry"    → triggers poetic recitation.
+                  Detect: two hemistichs, matching rhyme (بيت شعر), "قال الشاعر".
+  • "dua"       → triggers soft supplication bed.
+                  Detect: starts with "اللهم", "ربنا", "سبحان", "لا حول ولا قوة".
+  • "narration" → everything else (author's voice, explanation, story). DEFAULT.
 
-If the scene is emotional/abstract, use MOOD queries: "candlelit mosque interior", "old Arabic manuscript on wooden table", "desert caravan at sunset".
-Use the GLOBAL CONTEXT to anchor queries in the correct era, region, and entities."""
+QUERY RULES (image search, NOT translation of the narration):
+- Describe something VISIBLE: object, place, architecture, artifact, mood.
+- Anchor to GLOBAL CONTEXT era/region (dynasty, city, century).
+- Concrete nouns only. No abstract concepts, no verbs of feeling.
+- 3-8 words per query.
+- For emotional/abstract scenes, use MOOD queries
+  (e.g. "candlelit mosque interior", "old manuscript on wooden desk").
 
+BAD → GOOD examples:
+  ✗ "Allah is the best disposer of affairs"  → ✓ "الله اكبر"
+  ✗ "Author biography born 673"              → ✓ "medieval Islamic scholar portrait artwork"
+  ✗ "Imam Muhammad ibn Ahmad"                → ✓ "الامام الذهبي"
+
+KEN_BURNS — vary across consecutive scenes. Never repeat the same value 3× in a row.
+
+OUTPUT: JSON only. No explanations. No ``` fences.
+"""
 
 USER_PROMPT = """GLOBAL CONTEXT:
 {context}
@@ -78,7 +93,8 @@ Use start/end timestamps between {chunk_start:.1f} and {chunk_end:.1f}. Do not r
 Return JSON only."""
 
 
-def plan(transcript_text: str, context: dict | None = None) -> tuple[list[Scene], list[ImportantMoment]]:
+def plan(transcript_text: str, context: dict | None = None,          video_duration: float | None = None
+) -> tuple[list[Scene], list[ImportantMoment]]:
     PLAN_DIR.mkdir(parents=True, exist_ok=True)
 
     context_str = format_context_for_prompt(context or {})
@@ -128,6 +144,10 @@ def plan(transcript_text: str, context: dict | None = None) -> tuple[list[Scene]
     all_scenes.sort(key=lambda s: s.start)
     all_scenes = _sanitize_scenes(all_scenes)
     all_scenes = _merge_short_scenes(all_scenes)
+    # ── NEW: enforce full coverage ────────────────
+    if video_duration:
+        all_scenes = _ensure_full_coverage(all_scenes, video_duration)
+
     for idx, s in enumerate(all_scenes, start=1):
         s.id = idx
 
@@ -246,6 +266,7 @@ def _try_parse_json(text: str) -> dict | None:
 
     return None
 
+VALID_CONTENT_TYPES = {"narration", "quran", "hadith", "poetry", "dua"}
 
 def _build_scenes(plan: dict) -> list[Scene]:
     scenes = []
@@ -258,20 +279,20 @@ def _build_scenes(plan: dict) -> list[Scene]:
             arabic_q = str(s.get("arabic_query", "")).strip()
             english_q = str(s.get("english_query", "")).strip()
 
-            # Repair: if arabic_query is a placeholder, use the scene text
             if _is_placeholder(arabic_q):
                 arabic_q = text
-
-            # Repair: if english_query is a placeholder, try to salvage
-            # by stripping the Arabic prefix and using just the text
             if _is_placeholder(english_q):
                 english_q = ""
 
-            # Skip scenes where the timestamps are obviously wrong
             start = float(s["start"])
             end = float(s["end"])
             if end <= start:
                 continue
+
+            # Parse content_type safely
+            content_type = str(s.get("content_type", "narration")).lower().strip()
+            if content_type not in VALID_CONTENT_TYPES:
+                content_type = "narration"
 
             scenes.append(Scene(
                 id=i,
@@ -284,11 +305,11 @@ def _build_scenes(plan: dict) -> list[Scene]:
                 audio_note=(s.get("audio_note") or "low ambient music"),
                 is_important=bool(s.get("is_important", False)),
                 ken_burns=s.get("ken_burns", "zoom_in"),
+                content_type=content_type,
             ))
         except (KeyError, TypeError, ValueError) as e:
             log.warn(f"Skipping malformed scene: {e}")
     return scenes
-
 
 def _build_moments(plan: dict, scenes: list[Scene]) -> list[ImportantMoment]:
     """
@@ -370,11 +391,17 @@ def _merge_short_scenes(scenes: list[Scene]) -> list[Scene]:
         if not buffer:
             return
         first = buffer[0]
-        # For queries, take the longest (most specific) one rather than joining
         arabic_q = max((s.arabic_query for s in buffer if s.arabic_query),
                        key=len, default="")
         english_q = max((s.english_query for s in buffer if s.english_query),
                         key=len, default="")
+        # Prefer the most "special" content type — if any segment is
+        # quran/hadith/poetry/dua, the merged scene keeps that type.
+        special = next(
+            (s.content_type for s in buffer
+             if s.content_type != "narration"),
+            "narration",
+        )
         merged.append(Scene(
             id=first.id,
             start=first.start,
@@ -386,6 +413,7 @@ def _merge_short_scenes(scenes: list[Scene]) -> list[Scene]:
             audio_note=first.audio_note,
             is_important=any(s.is_important for s in buffer),
             ken_burns=first.ken_burns,
+            content_type=special,     # ← added
         ))
         buffer = []
         buffer_duration = 0.0
@@ -399,3 +427,37 @@ def _merge_short_scenes(scenes: list[Scene]) -> list[Scene]:
     flush()
     log.info(f"Merged short scenes: {len(scenes)} → {len(merged)}")
     return merged
+
+def _ensure_full_coverage(scenes: list[Scene],
+                          video_duration: float) -> list[Scene]:
+    """
+    Snap scenes to span [0, video_duration] with no internal gaps.
+    Prevents `-shortest` from truncating the final render.
+    """
+    if not scenes or video_duration <= 0:
+        return scenes
+
+    # Snap first scene to time 0
+    if scenes[0].start > 0.1:
+        log.info(f"Extending scene 1 start from {scenes[0].start:.2f}s → 0.00s")
+        scenes[0].start = 0.0
+
+    # Fill internal gaps by extending previous scene
+    for i in range(len(scenes) - 1):
+        gap = scenes[i + 1].start - scenes[i].end
+        if gap > 0.1:
+            log.warn(f"Filling {gap:.2f}s gap between scene {scenes[i].id} "
+                     f"and scene {scenes[i+1].id}")
+            scenes[i].end = scenes[i + 1].start
+
+    # Extend last scene to video duration
+    last = scenes[-1]
+    if last.end < video_duration - 0.1:
+        log.warn(f"Extending last scene end from {last.end:.2f}s → "
+                 f"{video_duration:.2f}s (video duration)")
+        last.end = video_duration
+
+    total = sum(s.end - s.start for s in scenes)
+    log.ok(f"Scene coverage: 0.00s → {video_duration:.2f}s "
+           f"(total {total:.2f}s across {len(scenes)} scenes)")
+    return scenes

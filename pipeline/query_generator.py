@@ -17,41 +17,49 @@ BATCH_SIZE = 4    # scenes per LLM call
 
 
 QUERY_PROMPT = """You write IMAGE SEARCH QUERIES for an Arabic historical documentary.
+The queries retrieve photographs, paintings, manuscripts, or architecture —
+they are NOT translations of the narration.
 
-GLOBAL VIDEO CONTEXT:
+GLOBAL CONTEXT:
 {context}
 
-You will be given {n} scenes. For EACH scene, produce TWO queries:
-  - arabic_query: a search query in Arabic
-  - english_query: a search query in English
+TASK
+For each of the {n} scenes below, produce:
+  - arabic_query  : 3-8 Arabic words, concrete visible thing
+  - english_query : 3-8 English words, Wikimedia-Commons-friendly (no stop words)
 
-The queries must find a PHOTOGRAPH, PAINTING, MANUSCRIPT, or ARCHITECTURAL IMAGE
-that visually illustrates the scene. They are NOT translations of the narration.
+RULES
+- Describe something a camera can see: person, building, artifact, manuscript, landscape, mood-lit interior.
+- Anchor queries to the era / region / entities from GLOBAL CONTEXT when relevant.
+- FOCUS ON OLD IMAGES/ARTWORK/STUFF THAT FEEL PRESENT THAT 
+- Prefer concrete nouns: mosque, minaret, manuscript, scroll, courtyard, astrolabe, calligraphy, caravan.
+- For abstract or emotional scenes, use a MOOD query instead of a literal one.
+- NEVER return the narration text as a query.
+- NEVER use abstract nouns (faith, justice, knowledge, biography).
 
-SCENE FORMATTING RULES:
-- Query must describe something VISIBLE.
-- Include named entities from the global context when relevant.
-- Prefer concrete nouns: mosque, manuscript, minaret, scroll, courtyard, calligraphy.
-- If the scene is abstract/emotional, use a mood query.
-- Each query should be 3-8 words.
-- English query must be useful for Wikimedia Commons search — avoid stop words.
+EXAMPLES
+  Scene: "وُلد الإمام الذهبي في دمشق سنة 673 هـ"
+    ✓ arabic_query:  "الإمام الذهبي"
+    ✓ english_query: "medieval Damascus old city"
+  Scene: "وكان رحمه الله لا يفتر عن طلب العلم"
+    ✓ arabic_query:  "مخطوطة عربية قديمة على طاولة خشبية"
+    ✓ english_query: "old Arabic manuscript wooden table"
 
 SCENES:
 {scenes_block}
 
-Return ONLY this JSON, no commentary:
+OUTPUT — return ONLY this JSON, no markdown:
 {{
   "queries": [
-    {{"id": <scene_id>, "arabic_query": "...", "english_query": "..."}},
-    ...
+    {{"id": <scene_id>, "arabic_query": "...", "english_query": "..."}}
   ]
 }}
 
-Rules:
-- Return one entry per scene, in the same order.
-- Use the exact scene ids given above.
-- Return JSON only."""
-
+RULES
+- Exactly one entry per scene, in the same order as given.
+- Use the exact scene ids provided.
+- Output JSON only.
+"""
 
 def generate_queries(scenes: list[Scene], context: dict) -> list[Scene]:
     """Rewrite scene queries with context-aware, image-search-friendly terms."""

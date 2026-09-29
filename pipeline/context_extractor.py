@@ -16,41 +16,40 @@ from utils.logger import log
 # NOTE: We use <<TRANSCRIPT>> as the marker and .replace() instead of
 # .format() because the JSON schema in this prompt contains literal
 # braces, which .format() would try to interpret as placeholders.
-CONTEXT_PROMPT = """You are analyzing an Arabic historical documentary transcript
-to prepare for automated visual asset search.
+CONTEXT_PROMPT = """You analyze an Arabic documentary transcript to prepare it for automated image retrieval.
 
-FULL TRANSCRIPT:
+TASK
+Read the full transcript and extract structured GLOBAL CONTEXT as JSON.
+This context will be reused by downstream modules (scene planning, image search).
+Only include facts stated in or directly inferable from the transcript.
+
+TRANSCRIPT:
 <<TRANSCRIPT>>
 
-Extract the GLOBAL context. Return ONLY valid JSON matching this schema:
+OUTPUT — return ONLY this JSON object, no markdown, no commentary:
 
 {
-  "summary": "2-3 sentence summary of the whole video in English",
-  "main_subject": "Primary subject (person, topic, or event)",
-  "time_period": "Historical era, e.g. '13th century CE / 7th century AH'",
-  "region": "Geographic region, e.g. 'Damascus, Levant, Egypt, Hijaz'",
+  "summary_ar": "ملخص من 2-3 جمل بالعربية",
+  "main_subject": "person name or topic (Arabic, short)",
+  "main_subject_ar": "الاسم أو الموضوع بالعربية",
+  "time_period": "e.g. '7th century AH / 13th century CE' or 'غير محدد' if unclear",
+  "region": "e.g. 'Damascus, Levant' — comma-separated, Arabic",
   "key_entities": [
-    {"type": "person", "name_en": "Al-Dhahabi", "name_ar": "الذهبي", "role": "historian"},
-    {"type": "book",  "name_en": "Siyar A'lam al-Nubala", "name_ar": "سير أعلام النبلاء", "role": "biographical dictionary"}
+    {"type": "person|book|place|event|dynasty",
+     "name_en": "...", "name_ar": "...", "role": "one short phrase"}
   ],
-  "key_places": ["Damascus", "Mecca", "Cairo", "Alexandria", "Baalbek"],
-  "historical_context": "One paragraph of background to inform visual choices",
-  "visual_style_guidance": "e.g. 'aged manuscript pages, medieval Islamic architecture, sepia tones'",
-  "search_keywords": [
-    "medieval Islamic manuscript",
-    "13th century Damascus mosque",
-    "Mamluk architecture",
-    "Arabic calligraphy page"
-  ]
+  "historical_context": "3-5 sentences of background (Arabic) that will help pick era-appropriate visuals so it should be a summarization for the transcription so it's easy to understand",
+  "visual_style_guidance": "concrete visual motifs, e.g. 'aged parchment manuscripts, Mamluk stonework, oil-lamp lighting, sepia palette'",
+  "image_search_keywords_en": ["3-8 concrete English nouns for Wikimedia Commons"],
+  "image_search_keywords_ar": ["3-8 concrete Arabic nouns for Arabic image sources"]
 }
 
-Rules:
-- Return only JSON, no commentary, no markdown fences.
-- Extract 3-6 key entities with both English and Arabic spellings.
-- search_keywords MUST be image-search-friendly English phrases (concrete nouns, no abstract ideas).
-- If unsure of the exact era, use the closest century and mention uncertainty in historical_context.
-- Focus on what will help find IMAGES, not what will help tell the STORY."""
-
+RULES
+- 3 to 6 key_entities. Include people, books, places, dynasties that appear in the transcript.
+- Search keywords MUST be concrete and visible (mosque, manuscript, minaret, astrolabe, courtyard). NEVER abstract (faith, justice, biography).
+- If the era or region is genuinely unclear, write "غير محدد" / "unclear" — do NOT guess a specific century.
+- Output must be valid JSON. Do not wrap in ```.
+"""
 
 def extract_context(full_transcript: str) -> dict:
     PLAN_DIR.mkdir(parents=True, exist_ok=True)

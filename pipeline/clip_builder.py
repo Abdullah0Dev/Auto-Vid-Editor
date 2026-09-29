@@ -16,23 +16,27 @@ def build_all(video_path: str, scenes: list[Scene]) -> list[str]:
     for i, scene in enumerate(scenes):
         out = str(CLIPS_DIR / f"clip_{scene.id:03d}.mp4")
         _build_one(video_path, scene, out, is_first=(i == 0),
-                   is_last=(i == len(scenes) - 1))
+                   is_last=(i == len(scenes) - 1), fit_mode=scene.fit_mode)
         paths.append(out)
     log.ok(f"{len(paths)} clips built")
     return paths
 
 
 def _build_one(video_path: str, scene: Scene, out: str,
-               is_first: bool = False, is_last: bool = False):
+               is_first: bool = False, is_last: bool = False,
+               fit_mode: str = "contain"):
     duration = scene.end - scene.start
 
     if scene.visual_type == "recording":
         _trim_recording(video_path, scene.start, duration, out,
                         is_first, is_last)
-    elif scene.chosen_asset:
+    elif scene.chosen_asset and Path(scene.chosen_asset).exists():
+        log.info(f"  Scene {scene.id}: ken_burns "
+                 f"({Path(scene.chosen_asset).name}) [fit={fit_mode}]")
         _ken_burns(scene.chosen_asset, duration, scene.ken_burns, out,
-                   is_first, is_last)
+                   is_first, is_last, fit_mode=fit_mode)
     else:
+        log.warn(f"  Scene {scene.id}: no asset → placeholder")
         _placeholder(duration, out, is_first, is_last)
 
 
@@ -80,16 +84,46 @@ def _build_visual_filters(scene: Scene, duration: float,
 
 
 def _ken_burns(image: str, duration: float, direction: str, out: str,
-               is_first: bool = False, is_last: bool = False):
-    # Build a dummy Scene-like object for filter building
-    class _S: pass
-    s = _S()
-    s.ken_burns = direction
-    vf = _build_visual_filters(s, duration, is_first, is_last)
+               is_first: bool = False, is_last: bool = False,
+               fit_mode: str = "contain"):
+    frames = max(int(duration * FPS), 1)
+
+    kb = {
+        "zoom_in":   "z='min(zoom+0.0015,1.3)'",
+        "zoom_out":  "z='if(lte(zoom,1.0),1.3,max(1.001,zoom-0.0015))'",
+        "pan_left":  "z='1.2':x='if(lte(on,1),iw/4,iw/4-on*2)':y='ih/4'",
+        "pan_right": "z='1.2':x='if(lte(on,1),0,on*2)':y='ih/4'",
+    }.get(direction, "z='min(zoom+0.0015,1.3)'")
+
+    # ── Scale/pad strategy depends on fit mode ────────
+    if fit_mode == "cover":
+        # Fill the frame, crop overflowing edges
+        scale_pad = (
+            "scale=1920:1080:force_original_aspect_ratio=increase,"
+            "crop=1920:1080"
+        )
+    else:
+        # Letterbox — show whole image, pad with background
+        scale_pad = (
+            "scale=1920:1080:force_original_aspect_ratio=decrease,"
+            "pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0a0a1a"
+        )
+
+    vf_parts = [
+        scale_pad,
+        f"zoompan={kb}:d={frames}:s={RESOLUTION}:fps={FPS}",
+        "eq=saturation=0.92:contrast=1.05:brightness=-0.02",
+        "vignette=PI/5",
+    ]
+    if is_first:
+        vf_parts.append("fade=t=in:st=0:d=1.0")
+    if is_last:
+        vf_parts.append(f"fade=t=out:st={max(duration - 1.0, 0):.2f}:d=1.0")
+    vf_parts.append("format=yuv420p")
 
     subprocess.run([
         FFMPEG, "-y", "-loop", "1", "-i", image,
-        "-vf", vf,
+        "-vf", ",".join(vf_parts),
         "-t", str(duration),
         "-c:v", VIDEO_CODEC, "-preset", VIDEO_PRESET, "-crf", str(VIDEO_CRF),
         out,

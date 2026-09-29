@@ -10,13 +10,9 @@ from utils.logger import log, console
 
 def chat(model: str, messages: list, tools: list | None = None,
          timeout: int = 900, stream: bool | None = None,
-         label: str = "") -> dict:
-    """
-    Send a chat request to Ollama.
-
-    If `stream` is True (or STREAM_OUTPUT is on), prints tokens live to the
-    console as they arrive. Always returns the full response dict.
-    """
+         label: str = "", num_ctx: int | None = None,
+         options: dict | None = None) -> dict:
+    """..."""
     if stream is None:
         stream = STREAM_OUTPUT
 
@@ -29,10 +25,25 @@ def chat(model: str, messages: list, tools: list | None = None,
     if tools:
         payload["tools"] = tools
 
+    # Merge num_ctx and any caller-supplied options
+    opts = {}
+    if num_ctx is not None:
+        opts["num_ctx"] = num_ctx
+    if options:
+        opts.update(options)
+
+    # Defaults to prevent repetition loops on 7B models
+    opts.setdefault("repeat_penalty", 1.3)
+    opts.setdefault("repeat_last_n", 256)
+    opts.setdefault("temperature", 0.6)
+    opts.setdefault("top_p", 0.9)
+
+    if opts:
+        payload["options"] = opts
+
     if stream:
         return _chat_stream(model, payload, timeout, label)
     return _chat_block(model, payload, timeout)
-
 
 def _chat_block(model: str, payload: dict, timeout: int) -> dict:
     """Non-streaming request — wait for the whole response."""

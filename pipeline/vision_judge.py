@@ -9,35 +9,43 @@ from utils.logger import log
 
 
 PROMPT_TEMPLATE = """You are an expert visual researcher for an Arabic historical documentary.
+You evaluate candidate images and pick the single best one for a scene.
 
-SCENE CONTEXT (from the narration):
+SCENE NARRATION:
 {scene_text}
 
-SEARCH INTENT (what we were looking for):
+SEARCH INTENT (what we asked for):
 {english_query}
 
-EXCLUSION RULES — reject any image that:
-- Contains watermarks, logos, or prominent text overlays
-- Is clearly modern (cars, contemporary clothing, modern buildings)
-- Is low quality (blurry, pixelated, heavily compressed)
-- Shows a wrong subject (unrelated to the search intent)
-- Contains graphic violence or disturbing content
+You are shown {n_images} candidate images labelled A, B, C, ...
 
-CANDIDATE IMAGES: You are looking at {n_images} images labeled A, B, C (in order).
+TASK — for EACH image, in order:
+1. Describe what the image shows in ONE short factual sentence.
+2. State whether it violates any EXCLUSION rule below.
 
-TASK:
-1. Briefly describe what each image shows.
-2. State whether each image violates any exclusion rule.
-3. Choose the single best image that matches the historical scene.
-4. If NONE of them fit, say NONE.
+EXCLUSION RULES — mark "Violates: YES" if the image has any of:
+  - Visible watermark, logo, or prominent text overlay
+  - Clearly modern elements (cars, contemporary clothing, modern buildings, electrical wires)
+  - Low quality: blurry, pixelated, heavily compressed
+  - Wrong subject (unrelated to the search intent)
+  - Graphic violence or disturbing content
 
-Respond in EXACTLY this format, nothing else:
+Then pick the SINGLE best image that fits the scene's era and search intent.
+If NONE fit, choose NONE.
 
-IMAGE A: [one-sentence description] | Violates: YES/NO
-IMAGE B: [one-sentence description] | Violates: YES/NO
-IMAGE C: [one-sentence description] | Violates: YES/NO
-BEST: [A/B/C/NONE]
-REASON: [one short sentence]"""
+OUTPUT FORMAT — exactly these lines, nothing else:
+
+IMAGE A: <description> | Violates: YES/NO
+IMAGE B: <description> | Violates: YES/NO
+IMAGE C: <description> | Violates: YES/NO
+BEST: <A|B|C|NONE>
+REASON: <one short sentence explaining the choice>
+
+RULES
+- Describe only what you actually see. Do not infer from the search intent.
+- If an image is partially obscured or cropped, still describe it — do not skip.
+- "BEST" must be a single letter or NONE. Never multiple letters.
+"""
 
 
 def judge(scene: Scene) -> str:
@@ -64,6 +72,7 @@ def judge(scene: Scene) -> str:
             MODEL_VISION,
             [{"role": "user", "content": prompt, "images": images}],
             label=f"Vision (scene {scene.id})",
+            num_ctx=8192,           # ← add this line
         )
         answer = result["message"]["content"].strip()
         log.info(f"  → verdict preview: {answer[:200].replace(chr(10), ' | ')}")

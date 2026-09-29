@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>مراجعة المشاهد — محرر الفيديو التاريخي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* palette */
+    --emerald:  #0B3D2E;
+    --navy:     #0F1B2D;
+    --gold:     #C9A227;
+    --gold-2:   #E0B93C;
+    --beige:    #F2E8D5;
+    --leather:  #5A3E2B;
+    --maroon:   #7A1F2B;
+    --stone:    #3F4A4A;
+    --ivory:    #FAF7F0;
+    --copper:   #B87333;
+
+    /* derived */
+    --bg-deep:      #061a13;
+    --bg-panel:     #0a2a20;
+    --bg-panel-2:   #0d3326;
+    --border-soft:  rgba(201, 162, 39, 0.22);
+    --border-hard:  rgba(201, 162, 39, 0.45);
+    --shadow:       0 8px 32px rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: radial-gradient(ellipse at 20% 0%, #0d362a 0%, var(--bg-deep) 60%);
+    color: var(--ivory);
+    font-family: 'Cairo', 'Noto Naskh Arabic', system-ui, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    direction: rtl;
+  }
+  body {
+    display: grid;
+    grid-template-rows: 84px 1fr 190px;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "main"
+      "timeline";
+  }
+
+  /* ══════════ HEADER ══════════ */
+  header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 36px;
+    background: linear-gradient(180deg, #082218 0%, #061a13 100%);
+    border-bottom: 1px solid var(--border-soft);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    position: relative;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent, var(--gold) 50%, transparent);
+    opacity: 0.5;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .brand .logo-mark {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%,
+      #d4a827 0%, #a17a1a 55%, #5a3e2b 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 2px var(--gold), 0 0 24px rgba(201,162,39,0.35);
+    position: relative;
+  }
+  .brand .logo-mark::after {
+    content: '';
+    position: absolute; inset: 5px;
+    border: 1px solid rgba(11, 61, 46, 0.9);
+    border-radius: 50%;
+  }
+  .brand h1 {
+    font-family: 'Aref Ruqaa', serif;
+    font-size: 32px; font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--gold);
+    text-shadow: 0 2px 12px rgba(201,162,39,0.4),
+                 0 0 1px rgba(0,0,0,0.9);
+    line-height: 1;
+  }
+  .brand .sub {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 11px;
+    color: var(--beige);
+    opacity: 0.6;
+    letter-spacing: 0.32em;
+    margin-top: 4px;
+  }
+  .brand-text { display: flex; flex-direction: column; }
+
+  .header-actions { display: flex; align-items: center; gap: 22px; }
+  .countdown {
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    color: var(--beige);
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .countdown .num {
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .proceed-btn {
+    background: linear-gradient(135deg, var(--gold-2) 0%, var(--copper) 100%);
+    color: #1a1206;
+    border: none;
+    padding: 12px 30px;
+    font-family: 'Reem Kufi', 'Cairo', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    border-radius: 999px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 4px 20px rgba(201,162,39,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.2s;
+  }
+  .proceed-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(201,162,39,0.55),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .proceed-btn .arrow {
+    font-size: 18px;
+    transform: scaleX(-1); /* RTL flip */
+  }
+
+  /* ══════════ MAIN GRID ══════════ */
+  main {
+    grid-area: main;
+    display: grid;
+    grid-template-columns: 1fr 260px 340px;
+    gap: 18px;
+    padding: 18px 24px;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* ─── Big preview ─── */
+  .stage {
+    background: #04120d;
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .stage-inner {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at center, #06231a 0%, #04120d 100%);
+    overflow: hidden;
+    position: relative;
+  }
+  .stage-inner img,
+  .stage-inner video {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .stage-empty {
+    color: var(--beige);
+    opacity: 0.5;
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 18px;
+    text-align: center;
+    padding: 40px;
+    line-height: 2;
+  }
+  /* video controls bar */
+  .stage-controls {
+    height: 54px;
+    background: linear-gradient(180deg, #061a13, #04120d);
+    border-top: 1px solid var(--border-soft);
+    display: flex; align-items: center;
+    padding: 0 22px;
+    gap: 16px;
+  }
+  .ctrl-icon {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.15s;
+    font-size: 16px;
+  }
+  .ctrl-icon:hover { background: rgba(201,162,39,0.12); }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(242, 232, 213, 0.1);
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+  }
+  .progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--gold-2), var(--gold));
+    border-radius: 2px;
+    width: 25%;
+    box-shadow: 0 0 8px rgba(201,162,39,0.6);
+  }
+  .progress-knob {
+    position: absolute; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border: 2px solid #04120d;
+    border-radius: 50%;
+    left: 25%;
+    box-shadow: 0 0 10px rgba(201,162,39,0.7);
+  }
+  .time-code {
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
+    color: var(--beige);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    min-width: 92px;
+    text-align: center;
+  }
+
+  /* ─── Middle: candidate options ─── */
+  .candidates {
+    background: linear-gradient(180deg, #082218 0%, #061a13 100%);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .section-head {
+    padding: 14px 16px 12px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--gold);
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .section-head .icon {
+    width: 22px; height: 22px;
+    border: 1px solid var(--border-hard);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    color: var(--gold);
+  }
+  .cand-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex; flex-direction: column;
+    gap: 10px;
+  }
+  .cand-list::-webkit-scrollbar { width: 6px; }
+  .cand-list::-webkit-scrollbar-thumb {
+    background: var(--border-hard); border-radius: 3px;
+  }
+  .cand {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #04120d;
+    border: 2px solid transparent;
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .cand img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+  .cand:hover {
+    border-color: var(--border-hard);
+    transform: translateY(-1px);
+  }
+  .cand.active {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px var(--gold),
+                0 0 20px rgba(201,162,39,0.5);
+  }
+  .cand.active::after {
+    content: '✓';
+    position: absolute; top: 6px; right: 6px;
+    width: 22px; height: 22px;
+    background: var(--gold);
+    color: #1a1206;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .cand-add {
+    aspect-ratio: 16 / 9;
+    background: rgba(201,162,39,0.05);
+    border: 2px dashed var(--border-hard);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--gold);
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 13px;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.18s;
+  }
+  .cand-add:hover {
+    background: rgba(201,162,39,0.12);
+    border-style: solid;
+  }
+  .cand-add .plus { font-size: 26px; line-height: 1; }
+
+  /* ─── Right sidebar: scene details ─── */
+  .details {
+    background: linear-gradient(180deg, #082218 0%, #061a13 100%);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .details-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex; flex-direction: column;
+    gap: 18px;
+  }
+  .details-body::-webkit-scrollbar { width: 6px; }
+  .details-body::-webkit-scrollbar-thumb {
+    background: var(--border-hard); border-radius: 3px;
+  }
+
+  .transcription {
+    background: rgba(242, 232, 213, 0.04);
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    padding: 14px 16px;
+  }
+  .transcription-label {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 11px;
+    color: var(--gold);
+    opacity: 0.75;
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+  }
+  .transcription-text {
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--beige);
+    direction: rtl;
+    text-align: right;
+  }
+
+  .keywords-label {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 11px;
+    color: var(--gold);
+    opacity: 0.75;
+    letter-spacing: 0.04em;
+  }
+  .keywords-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .kw-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .kw-col-title {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 11px;
+    color: var(--beige);
+    opacity: 0.55;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .kw-col-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-soft);
+  }
+  .kw-full {
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
+    color: var(--beige);
+    background: rgba(242, 232, 213, 0.05);
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.18s;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .kw-full:hover {
+    background: rgba(201,162,39,0.10);
+    border-color: var(--gold);
+    transform: translateX(-2px);
+  }
+  .kw-full .kw-text {
+    flex: 1;
+    direction: rtl;
+    text-align: right;
+  }
+  .kw-full .kw-text.en {
+    direction: ltr;
+    text-align: left;
+    font-family: 'Cairo', sans-serif;
+  }
+  .kw-full .copy-icon {
+    color: var(--gold);
+    font-size: 13px;
+    opacity: 0.75;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .kw-full:hover .copy-icon { opacity: 1; }
+  .kw-full.copied {
+    background: rgba(78, 201, 160, 0.12);
+    border-color: rgba(78, 201, 160, 0.5);
+  }
+  .kw-full.copied .copy-icon { color: #7ad9b5; }
+
+  /* Fit toggle in the stage controls */
+  .fit-toggle {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 11px;
+    color: var(--beige);
+    background: rgba(4, 18, 13, 0.6);
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    padding: 6px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.03em;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .fit-toggle:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .fit-toggle.active {
+    background: rgba(201,162,39,0.12);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .fit-toggle .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.4;
+  }
+  .fit-toggle.active .dot { opacity: 1; }
+ 
+  .kw-list {
+    display: flex; flex-direction: column;
+    gap: 6px;
+  }
+  .kw {
+    font-family: 'Cairo', sans-serif;
+    font-size: 11px;
+    color: var(--beige);
+    background: rgba(242, 232, 213, 0.05);
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .kw:hover {
+    background: rgba(201,162,39,0.08);
+    border-color: var(--border-hard);
+  }
+  .kw .magnifier {
+    color: var(--gold);
+    font-size: 11px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+
+  .custom-url-block {
+    display: flex; flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .custom-url-block input {
+    width: 100%;
+    padding: 11px 14px;
+    background: rgba(4, 18, 13, 0.6);
+    border: 1px solid var(--border-soft);
+    color: var(--ivory);
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
+    border-radius: 3px;
+    direction: ltr;
+    text-align: left;
+  }
+  .custom-url-block input::placeholder {
+    color: var(--beige);
+    opacity: 0.35;
+  }
+  .custom-url-block input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(201,162,39,0.15);
+  }
+  .btn-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 8px;
+  }
+  .btn {
+    padding: 10px 14px;
+    background: rgba(4, 18, 13, 0.6);
+    border: 1px solid var(--border-hard);
+    color: var(--beige);
+    font-family: 'Reem Kufi', 'Cairo', sans-serif;
+    font-size: 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover {
+    background: rgba(201,162,39,0.1);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--gold-2) 0%, var(--copper) 100%);
+    color: #1a1206;
+    border-color: transparent;
+    font-weight: 600;
+  }
+  .btn.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201,162,39,0.4);
+  }
+  .msg {
+    font-size: 11px;
+    padding: 8px 10px;
+    border-radius: 3px;
+    font-family: 'Cairo', sans-serif;
+    display: none;
+  }
+  .msg.show { display: block; }
+  .msg.ok {
+    background: rgba(78, 201, 160, 0.1);
+    color: #7ad9b5;
+    border: 1px solid rgba(78, 201, 160, 0.3);
+  }
+  .msg.err {
+    background: rgba(122, 31, 43, 0.25);
+    color: #f0a0a8;
+    border: 1px solid rgba(122, 31, 43, 0.5);
+  }
+
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .chip {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 10px;
+    color: var(--beige);
+    background: rgba(242, 232, 213, 0.05);
+    border: 1px solid var(--border-soft);
+    padding: 4px 10px;
+    border-radius: 3px;
+    letter-spacing: 0.03em;
+  }
+  .chip.gold {
+    color: var(--gold);
+    border-color: rgba(201,162,39,0.35);
+    background: rgba(201,162,39,0.08);
+  }
+  .chip.warn {
+    color: #f0a0a8;
+    border-color: rgba(122,31,43,0.5);
+    background: rgba(122,31,43,0.15);
+  }
+
+  /* ══════════ TIMELINE ══════════ */
+  .timeline-wrap {
+    grid-area: timeline;
+    background: linear-gradient(180deg, #061a13 0%, #04120d 100%);
+    border-top: 1px solid var(--border-soft);
+    padding: 14px 24px 20px;
+    display: flex; flex-direction: column;
+    gap: 12px;
+    position: relative;
+  }
+  .timeline-wrap::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent, var(--gold) 50%, transparent);
+    opacity: 0.35;
+  }
+  .timeline-head {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--gold);
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 14px;
+  }
+  .timeline-head .icon {
+    width: 22px; height: 22px;
+    border: 1px solid var(--border-hard);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .timeline {
+    display: flex; gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-behavior: smooth;
+  }
+  .timeline::-webkit-scrollbar { height: 6px; }
+  .timeline::-webkit-scrollbar-thumb {
+    background: var(--border-hard); border-radius: 3px;
+  }
+  .thumb {
+    position: relative;
+    flex: 0 0 210px;
+    aspect-ratio: 16 / 9;
+    background: #04120d;
+    border: 2px solid rgba(201,162,39,0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .thumb:hover {
+    border-color: var(--border-hard);
+    transform: translateY(-2px);
+  }
+  .thumb.active {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px var(--gold),
+                0 0 24px rgba(201,162,39,0.45);
+  }
+  .thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+  .thumb .empty {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(45deg,
+      #06231a, #06231a 8px, #082a1f 8px, #082a1f 16px);
+    color: var(--beige); opacity: 0.5;
+    font-family: 'Cairo', sans-serif;
+    font-size: 11px;
+  }
+  .thumb .overlay {
+    position: absolute;
+    inset: auto 0 0 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(4,18,13,0.95) 100%);
+    padding: 18px 10px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .thumb .num {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 15px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .thumb .title {
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 12px;
+    color: var(--beige);
+    text-align: left;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
+  }
+  .thumb .duration {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(4,18,13,0.85);
+    color: var(--gold);
+    font-family: 'Cairo', sans-serif;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    padding: 3px 7px;
+    border-radius: 2px;
+    border: 1px solid var(--border-soft);
+  }
+  .thumb.important::before {
+    content: '★';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: var(--gold);
+    font-size: 16px;
+    text-shadow: 0 0 8px rgba(0,0,0,0.9);
+    z-index: 2;
+  }
+  .thumb.no-asset {
+    border-color: rgba(122,31,43,0.4);
+  }
+
+  /* ══════════ TOAST ══════════ */
+  .toast {
+    position: fixed;
+    bottom: 210px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #0d3326, #082218);
+    border: 1px solid var(--gold);
+    color: var(--ivory);
+    padding: 14px 24px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    border-radius: 4px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.7),
+                0 0 24px rgba(201,162,39,0.3);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    z-index: 50;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-6px);
+  }
+
+  /* ══════════ OVERLAY ══════════ */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(4, 18, 13, 0.94);
+    backdrop-filter: blur(12px);
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 24px;
+    z-index: 100;
+  }
+  .overlay.show { display: flex; }
+  .overlay h2 {
+    font-family: 'Aref Ruqaa', serif;
+    font-size: 48px;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 40px rgba(201,162,39,0.5);
+  }
+  .overlay p {
+    color: var(--beige);
+    opacity: 0.75;
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 17px;
+    direction: rtl;
+  }
+  .overlay .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(201,162,39,0.15);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ══════════ MODAL (custom URL) ══════════ */
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(4, 18, 13, 0.85);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 80;
+  }
+  .modal.show { display: flex; }
+  .modal-card {
+    background: linear-gradient(180deg, #0a2a20, #061a13);
+    border: 1px solid var(--border-hard);
+    border-radius: 6px;
+    padding: 28px;
+    width: min(560px, 90vw);
+    box-shadow: var(--shadow), 0 0 60px rgba(201,162,39,0.15);
+  }
+  .modal-card h3 {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 20px;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .modal-card p {
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
+    color: var(--beige);
+    opacity: 0.65;
+    margin-bottom: 18px;
+    line-height: 1.7;
+  }
+  .modal-card input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(4, 18, 13, 0.6);
+    border: 1px solid var(--border-soft);
+    color: var(--ivory);
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    border-radius: 3px;
+    direction: ltr;
+    text-align: left;
+    margin-bottom: 16px;
+  }
+  .modal-card input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,162,39,0.15);
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header>
+  <div class="brand">
+    <div class="logo-mark"></div>
+    <div class="brand-text">
+      <h1>محرر المشاهد</h1>
+      <div class="sub">SCENE REVIEW</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="countdown">
+      <span>يبدأ تلقائياً بعد</span>
+      <span class="num" id="countdown">20:00</span>
+    </div>
+    <button class="proceed-btn" id="proceedBtn">
+      <span>متابعة</span>
+      <span class="arrow">←</span>
+    </button>
+  </div>
+</header>
+
+<!-- ══════════ MAIN ══════════ -->
+<main>
+
+  <!-- Big preview -->
+  <section class="stage">
+    <div class="stage-inner" id="stageInner">
+      <div class="stage-empty">جارٍ التحميل…</div>
+    </div>
+  <div class="stage-controls">
+  <div class="ctrl-icon" id="playBtn">▶</div>
+  <div class="time-code" id="timecode">00:00 / 00:00</div>
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+    <div class="progress-knob"></div>
+  </div>
+  <button class="fit-toggle" id="fitToggle" title="طريقة العرض في المعاينة فقط">
+    <span class="dot"></span>
+    <span id="fitLabel">ملء الإطار</span>
+  </button>
+  <div class="ctrl-icon" title="ملء الشاشة">⛶</div>
+</div>
+  </section>
+
+  <!-- Middle: candidate options -->
+  <section class="candidates">
+    <div class="section-head">
+      <span class="icon">▦</span>
+      <span>خيارات المشهد</span>
+    </div>
+    <div class="cand-list" id="candList"></div>
+  </section>
+
+  <!-- Right: scene details -->
+  <section class="details">
+    <div class="section-head">
+      <span class="icon">☰</span>
+      <span>تفاصيل المشهد</span>
+    </div>
+    <div class="details-body" id="detailsBody"></div>
+  </section>
+
+</main>
+
+<!-- ══════════ TIMELINE ══════════ -->
+<div class="timeline-wrap">
+  <div class="timeline-head">
+    <span class="icon">▤</span>
+    <span>المشاهد</span>
+  </div>
+  <div class="timeline" id="timeline"></div>
+</div>
+
+<!-- ══════════ MODAL ══════════ -->
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <h3>إضافة مصدر مخصص</h3>
+    <p>الصق رابط URL أو مساراً محلياً لصورة أو فيديو. سيتم تنزيله تلقائياً إذا كان رابطاً بعيداً.</p>
+    <input type="text" id="modalInput" placeholder="https://example.com/image.jpg  أو  /path/to/file.mp4" />
+    <div class="modal-actions">
+      <button class="btn primary" id="modalConfirm">تأكيد</button>
+      <button class="btn" id="modalCancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ OVERLAY ══════════ -->
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <h2 id="overlayTitle">جارٍ المتابعة…</h2>
+  <p id="overlayMsg">يتم الآن بناء المقاطع وإخراج الفيديو النهائي.</p>
+</div>
+
+<!-- ══════════ TOAST ══════════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════
+let state = { scenes: [], context: {}, timeout_seconds: 1200 };
+let currentIdx = 0;
+let timeoutAt = null;
+// fit mode: 'contain' (letterbox, default) or 'cover' (fill frame)
+ 
+const $ = (id) => document.getElementById(id);
+const fmt = (s) => {
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+};
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function toast(msg, kind = '') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + kind;
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.className = 'toast ' + kind, 2800);
+}
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) { /* fall through */ }
+
+  // Fallback for non-HTTPS or older browsers
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+// ═══════════════════════════════════════════════════
+// Load / render
+// ═══════════════════════════════════════════════════
+async function loadState() {
+  const r = await fetch('/api/state');
+  state = await r.json();
+  timeoutAt = Date.now() + state.timeout_seconds * 1000;
+  renderAll();
+}
+
+function renderAll() {
+  renderStage();
+  renderCandidates();
+  renderDetails();
+  renderTimeline();
+}
+
+function renderStage() {
+  const s = state.scenes[currentIdx];
+  if (!s) return;
+  const inner = $('stageInner');
+  const src = s.chosen_url;
+  const dur = s.end - s.start;
+  $('timecode').textContent = `00:00 / ${fmt(dur)}`;
+
+  if (!src) {
+    inner.innerHTML = `<div class="stage-empty">لا توجد صورة لهذا المشهد.<br>اختر من الخيارات أو أضف رابطاً مخصصاً.</div>`;
+    return;
+  }
+
+  const fit = s.fit_mode === 'cover' ? 'cover' : 'contain';
+  const fitCss = `object-fit: ${fit}; width: 100%; height: 100%;`;
+  const isVideo = /\.(mp4|webm|mov|m4v)$/i.test(src);
+
+  if (isVideo) {
+    inner.innerHTML = `<video src="${src}" controls autoplay muted loop style="${fitCss}"></video>`;
+  } else {
+    inner.innerHTML = `<img src="${src}" alt="" style="${fitCss}">`;
+  }
+
+  // Update fit toggle label to match this scene
+  const btn = $('fitToggle');
+  const label = $('fitLabel');
+  if (btn && label) {
+    const isCover = s.fit_mode === 'cover';
+    btn.classList.toggle('active', isCover);
+    label.textContent = isCover ? 'ملء الإطار' : 'الحجم الأصلي';
+  }
+}
+function renderCandidates() {
+  const s = state.scenes[currentIdx];
+  if (!s) return;
+  const list = $('candList');
+
+  const cands = (s.candidates || []).map((c, i) => {
+    // candidate path -> asset URL
+    const filename = c.split('/').pop();
+    const url = `/asset/${s.id}/${filename}`;
+    const active = (s.chosen_asset === c) ? 'active' : '';
+    return `<div class="cand ${active}" data-cand="${esc(c)}">
+      <img src="${url}" alt="" loading="lazy">
+    </div>`;
+  }).join('');
+
+  list.innerHTML = cands + `
+    <div class="cand-add" id="candAdd">
+      <div class="plus">+</div>
+      <div>مصدر مخصص</div>
+    </div>
+  `;
+
+  list.querySelectorAll('.cand').forEach(el => {
+    el.onclick = () => selectCandidate(el.dataset.cand);
+  });
+  $('candAdd').onclick = openModal;
+}
+
+function renderDetails() {
+  const s = state.scenes[currentIdx];
+  if (!s) return;
+  const body = $('detailsBody');
+
+  const arQuery = (s.arabic_query || '').trim();
+  const enQuery = (s.english_query || '').trim();
+
+  body.innerHTML = `
+    <div class="transcription">
+      <div class="transcription-label">النص الأصلي</div>
+      <div class="transcription-text">${esc(s.text)}</div>
+    </div>
+
+    <div>
+      <div class="keywords-label">الكلمات المفتاحية</div>
+      <div class="keywords-grid">
+        ${arQuery ? `
+          <div class="kw-row">
+            <div class="kw-col-title">بالعربية</div>
+            <div class="kw-full" data-copy="${esc(arQuery)}" data-kind="ar">
+              <span class="kw-text">${esc(arQuery)}</span>
+              <span class="copy-icon">⧉</span>
+            </div>
+          </div>
+        ` : ''}
+        ${enQuery ? `
+          <div class="kw-row">
+            <div class="kw-col-title">بالإنجليزية</div>
+            <div class="kw-full" data-copy="${esc(enQuery)}" data-kind="en">
+              <span class="kw-text en">${esc(enQuery)}</span>
+              <span class="copy-icon">⧉</span>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+
+    <div class="custom-url-block">
+      <input type="text" id="inlineUrl" placeholder="رابط صورة أو فيديو مخصص…" />
+      <div class="btn-row">
+        <button class="btn primary" id="inlineApply">تطبيق</button>
+        <button class="btn" id="inlineClear">مسح</button>
+      </div>
+      <div class="msg" id="inlineMsg"></div>
+    </div>
+
+    <div>
+      <div class="keywords-label">حالة المشهد</div>
+      <div class="chips" style="margin-top:10px">
+        <span class="chip">${esc(s.visual_type)}</span>
+        ${s.is_important ? '<span class="chip gold">★ مشهد مهم</span>' : ''}
+        ${s.chosen_asset ? '' : '<span class="chip warn">لا توجد صورة</span>'}
+      </div>
+    </div>
+  `;
+
+  // Wire up keyword copy
+  body.querySelectorAll('.kw-full').forEach(el => {
+    el.onclick = () => {
+      const text = el.dataset.copy;
+      copyToClipboard(text).then(ok => {
+        if (!ok) { toast('تعذّر النسخ', 'err'); return; }
+        el.classList.add('copied');
+        el.querySelector('.copy-icon').textContent = '✓';
+        toast('تم النسخ — يمكنك البحث يدوياً', 'ok');
+        setTimeout(() => {
+          el.classList.remove('copied');
+          el.querySelector('.copy-icon').textContent = '⧉';
+        }, 1800);
+      });
+    };
+  });
+
+  // Inline URL handler
+  $('inlineApply').onclick = () => {
+    const url = $('inlineUrl').value.trim();
+    if (url) applyCustomUrl(url, 'inlineMsg');
+  };
+  $('inlineClear').onclick = () => {
+    $('inlineUrl').value = '';
+    $('inlineMsg').className = 'msg';
+  };
+  $('inlineUrl').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const url = $('inlineUrl').value.trim();
+      if (url) applyCustomUrl(url, 'inlineMsg');
+    }
+  });
+}
+function renderTimeline() {
+  const tl = $('timeline');
+  tl.innerHTML = state.scenes.map((s, i) => {
+    const src = s.chosen_url;
+    const title = (s.text || '').trim().split(/[،.؟!]/)[0].slice(0, 40) || `مشهد ${i + 1}`;
+    const thumb = src
+      ? `<img src="${src}" alt="">`
+      : `<div class="empty">لا توجد صورة</div>`;
+    const cls = [
+      'thumb',
+      i === currentIdx ? 'active' : '',
+      s.is_important ? 'important' : '',
+      src ? '' : 'no-asset',
+    ].join(' ');
+    return `<div class="${cls}" data-idx="${i}">
+      ${thumb}
+      <div class="duration">${(s.end - s.start).toFixed(1)}s</div>
+      <div class="overlay">
+        <span class="num">${String(i + 1).padStart(2, '0')}</span>
+        <span class="title">${esc(title)}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  tl.querySelectorAll('.thumb').forEach(el => {
+    el.onclick = () => goTo(parseInt(el.dataset.idx, 10));
+  });
+}
+
+function goTo(idx) {
+  if (idx < 0 || idx >= state.scenes.length) return;
+  currentIdx = idx;
+  renderAll();
+  // Scroll timeline thumb into view
+  const active = document.querySelector('.thumb.active');
+  if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+}
+
+// ═══════════════════════════════════════════════════
+// Actions
+// ═══════════════════════════════════════════════════
+async function selectCandidate(path) {
+  const s = state.scenes[currentIdx];
+  const r = await fetch(`/api/scene/${s.id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chosen_asset: path }),
+  });
+  if (r.ok) {
+    const data = await r.json();
+    state.scenes[currentIdx] = data.scene;
+    renderAll();
+    toast('تم اختيار المشهد', 'ok');
+  }
+}
+
+async function applyCustomUrl(url, msgId) {
+  const s = state.scenes[currentIdx];
+  const msg = $(msgId);
+  msg.className = 'msg show';
+  msg.textContent = 'جارٍ التنزيل…';
+  msg.style.borderColor = 'var(--gold)';
+
+  const r = await fetch(`/api/scene/${s.id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ asset_url: url }),
+  });
+  const data = await r.json();
+  if (!r.ok) {
+    msg.className = 'msg show err';
+    msg.textContent = data.error || 'فشل التنزيل';
+    return;
+  }
+  state.scenes[currentIdx] = data.scene;
+  msg.className = 'msg show ok';
+  msg.textContent = '✓ تم تطبيق المصدر';
+  renderAll();
+  toast('تم تطبيق المصدر بنجاح', 'ok');
+}
+
+async function proceed() {
+  $('overlay').classList.add('show');
+  await fetch('/api/proceed', { method: 'POST' });
+}
+
+// ═══════════════════════════════════════════════════
+// Modal
+// ═══════════════════════════════════════════════════
+function openModal() {
+  $('modal').classList.add('show');
+  setTimeout(() => $('modalInput').focus(), 80);
+}
+function closeModal() {
+  $('modal').classList.remove('show');
+  $('modalInput').value = '';
+}
+$('modalCancel').onclick = closeModal;
+$('modalConfirm').onclick = () => {
+  const url = $('modalInput').value.trim();
+  if (!url) return;
+  closeModal();
+  // Apply to current scene with inline message
+  const s = state.scenes[currentIdx];
+  fetch(`/api/scene/${s.id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ asset_url: url }),
+  }).then(async r => {
+    const data = await r.json();
+    if (r.ok) {
+      state.scenes[currentIdx] = data.scene;
+      renderAll();
+      toast('تم تطبيق المصدر بنجاح', 'ok');
+    } else {
+      toast(data.error || 'فشل التنزيل', 'err');
+    }
+  });
+};
+$('modalInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('modalConfirm').click();
+});
+
+// ═══════════════════════════════════════════════════
+// Countdown
+// ═══════════════════════════════════════════════════
+setInterval(() => {
+  if (!timeoutAt) return;
+  const left = Math.max(0, Math.floor((timeoutAt - Date.now()) / 1000));
+  $('countdown').textContent = fmt(left);
+  if (left === 0) {
+    $('overlayTitle').textContent = 'انتهى الوقت';
+    $('overlayMsg').textContent = 'جارٍ المتابعة بما هو محدد حالياً.';
+    $('overlay').classList.add('show');
+  }
+}, 1000);
+
+// ═══════════════════════════════════════════════════
+// Keyboard
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft')  goTo(currentIdx + 1); // RTL: left goes forward
+  if (e.key === 'ArrowRight') goTo(currentIdx - 1); // RTL: right goes back
+  if (e.key === 'Escape')     closeModal();
+});
+
+// ═══════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════
+$('proceedBtn').onclick = proceed;
+$('playBtn').onclick = () => {
+  const v = document.querySelector('video');
+  if (v) v.paused ? v.play() : v.pause();
+};
+// Fit toggle — now per-scene and persistent
+$('fitToggle').onclick = async () => {
+  const s = state.scenes[currentIdx];
+  if (!s) return;
+
+  const newMode = (s.fit_mode === 'cover') ? 'contain' : 'cover';
+
+  // Optimistic update
+  s.fit_mode = newMode;
+  renderStage();
+
+  // Persist to server
+  const r = await fetch(`/api/scene/${s.id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fit_mode: newMode }),
+  });
+  if (!r.ok) {
+    toast('فشل حفظ الإعداد', 'err');
+    // Revert on failure
+    s.fit_mode = (newMode === 'cover') ? 'contain' : 'cover';
+    renderStage();
+  }
+};
+ 
+
+// Set initial label
+$('fitLabel').textContent = 'الحجم الأصلي';
+loadState();
+</script>
+</body>
+</html>

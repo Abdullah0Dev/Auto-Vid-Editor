@@ -15,7 +15,17 @@ MODELS_DIR = ROOT / "models"
 SEARCH_QUERY_PREFERENCE = "arabic"   # "arabic" | "english" | "both"
 SEARCH_FALLBACK_TO_ENGLISH = True    # if Arabic returns nothing, try English
 BG_MUSIC_DIR = ASSETS_DIR / "bg_music"
-NASHEED_DIR = ASSETS_DIR / "nasheed"
+NASHEED_DIR = ASSETS_DIR / "nasheed" 
+SEARCH_SOURCE = "pinterest"
+# Pinterest settings
+PINTEREST_NUM_IMAGES = 6            # fetch more than we need, filter later
+PINTEREST_MIN_RESOLUTION = (512, 512)
+# --- Human preview ---
+WEB_DIR = ROOT / "web"
+ENABLE_PREVIEW = True              # set False for fully automated runs
+PREVIEW_PORT = 5173
+PREVIEW_TIMEOUT_MINUTES = 20
+PREVIEW_AUTO_OPEN = True
 # --- Recording fallback appearance ---
 RECORDING_FALLBACK_INNER_W = 1344
 RECORDING_FALLBACK_INNER_H = 756
@@ -37,7 +47,7 @@ FINAL_DIR = OUTPUT_DIR / "final"
 # --- Ollama ---
 OLLAMA_BASE = "http://localhost:11434"
 MODEL_ORCHESTRATOR = "command-r7b-arabic:7b"
-MODEL_VISION = "qwen3-vl:8b"
+MODEL_VISION = "" #"qwen3-vl:8b"
 MODEL_KEEP_ALIVE = 0          # unload immediately after each call
 
 # --- Whisper (MLX, Apple Silicon) ---
