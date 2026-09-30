@@ -8,7 +8,7 @@ from pipeline import (
     asset_finder, vision_judge, audio_analyzer, clip_builder, renderer,
 )
 from utils.logger import log
-from utils.ollama_client import unload
+from utils.llm_client import unload
 
 
 TOTAL_STEPS = 7

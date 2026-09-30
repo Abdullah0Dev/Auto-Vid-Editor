@@ -5,7 +5,7 @@ import re
 from config import MODEL_ORCHESTRATOR, PLAN_DIR
 from models.types import Scene, ImportantMoment
 from pipeline.context_extractor import format_context_for_prompt
-from utils.ollama_client import chat
+from utils.llm_client import chat
 from utils.logger import log
 
 

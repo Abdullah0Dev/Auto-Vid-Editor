@@ -9,15 +9,14 @@ import re
 from config import MODEL_ORCHESTRATOR, PLAN_DIR
 from models.types import Scene
 from pipeline.context_extractor import format_context_for_prompt
-from utils.ollama_client import chat
+from utils.llm_client import chat
 from utils.logger import log
 
 
 BATCH_SIZE = 4    # scenes per LLM call
 
-
 QUERY_PROMPT = """You write IMAGE SEARCH QUERIES for an Arabic historical documentary.
-The queries retrieve photographs, paintings, manuscripts, or architecture —
+The queries retrieve photographs, paintings, manuscripts, artifacts, or architecture —
 they are NOT translations of the narration.
 
 GLOBAL CONTEXT:
@@ -25,25 +24,43 @@ GLOBAL CONTEXT:
 
 TASK
 For each of the {n} scenes below, produce:
-  - arabic_query  : 3-8 Arabic words, concrete visible thing
-  - english_query : 3-8 English words, Wikimedia-Commons-friendly (no stop words)
+  - arabic_query  : 3-8 Arabic words, highly specific and visually searchable
+  - english_query : 3-8 English words, Wikimedia-Commons-friendly
 
 RULES
-- Describe something a camera can see: person, building, artifact, manuscript, landscape, mood-lit interior.
-- Anchor queries to the era / region / entities from GLOBAL CONTEXT when relevant.
-- FOCUS ON OLD IMAGES/ARTWORK/STUFF THAT FEEL PRESENT THAT 
-- Prefer concrete nouns: mosque, minaret, manuscript, scroll, courtyard, astrolabe, calligraphy, caravan.
-- For abstract or emotional scenes, use a MOOD query instead of a literal one.
-- NEVER return the narration text as a query.
-- NEVER use abstract nouns (faith, justice, knowledge, biography).
+- Think like a historical image researcher, NOT a narrator.
+- Prefer a SPECIFIC historical person, event, battle, place, artifact, manuscript,
+  or famous historical episode over a generic visual description.
+- When legitimately relevant, use famous muslim historical names/entities:
+  صلاح الدين، خالد بن الوليد ابن سينا، الخوارزمي، ,
+  بيت الحكمة، اليرموك، فتح القدس, etc.
+- Example: "أسرى وجنود" → "صلاح الدين مع الأسرى" or a specific battle/person
+  from the GLOBAL CONTEXT.
+- MAKE SURE it's so popular old muslim guy that most of time people talk about it so you can find images with that keyword
+- Always prefer the MOST SPECIFIC legitimate historical subject that fits the scene.
+- Do NOT force famous people into scenes when the context does not support them.
+- Do NOT invent historical events, people, relationships, or actions.
+- Prefer things that actually exist as old paintings, manuscripts, photographs,
+  archaeological artifacts, maps, coins, or architecture.
+- Anchor searches to the era, region, and historical entities from GLOBAL CONTEXT.
+- For abstract scenes, find a concrete historical subject or use a period-appropriate
+  visual mood only when no specific subject exists.
+- NEVER return narration text as the query.
+- NEVER use vague abstract nouns like faith, justice, knowledge, biography.
+- Arabic and English queries should target the SAME specific visual subject.
 
 EXAMPLES
   Scene: "وُلد الإمام الذهبي في دمشق سنة 673 هـ"
-    ✓ arabic_query:  "الإمام الذهبي"
-    ✓ english_query: "medieval Damascus old city"
-  Scene: "وكان رحمه الله لا يفتر عن طلب العلم"
-    ✓ arabic_query:  "مخطوطة عربية قديمة على طاولة خشبية"
-    ✓ english_query: "old Arabic manuscript wooden table"
+    ✓ arabic_query: "الإمام الذهبي دمشق"
+    ✓ english_query: "Al-Dhahabi medieval Damascus"
+
+  Scene: "وكان حاتم الطائي يكرم ضيوفه"
+    ✓ arabic_query: "حاتم الطائي يطعم ضيوفه"
+    ✓ english_query: "Hatim al-Tai feeding guests"
+
+  Scene: "ازدهرت العلوم في بغداد"
+    ✓ arabic_query: "بيت الحكمة بغداد العباسية"
+    ✓ english_query: "House of Wisdom Abbasid Baghdad"
 
 SCENES:
 {scenes_block}
@@ -56,7 +73,7 @@ OUTPUT — return ONLY this JSON, no markdown:
 }}
 
 RULES
-- Exactly one entry per scene, in the same order as given.
+- Exactly one entry per scene, in the same order.
 - Use the exact scene ids provided.
 - Output JSON only.
 """

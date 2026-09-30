@@ -9,7 +9,7 @@ import json
 import re
 
 from config import MODEL_ORCHESTRATOR, PLAN_DIR
-from utils.ollama_client import chat
+from utils.llm_client import chat
 from utils.logger import log
 
 

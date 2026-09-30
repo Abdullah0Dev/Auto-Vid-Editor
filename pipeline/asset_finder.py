@@ -11,11 +11,12 @@ import subprocess
 import time
 from pathlib import Path
 from urllib.parse import quote_plus
+import hashlib
 
 import requests
 
 from config import (
-    FBU_BIN, FBU_TIMEOUT, FBU_MAX_CANDIDATES, SCENE_ASSETS_DIR,
+    ENABLE_FBU_FALLBACK, FBU_BIN, FBU_TIMEOUT, FBU_MAX_CANDIDATES, SCENE_ASSETS_DIR,
     SEARCH_QUERY_PREFERENCE, SEARCH_FALLBACK_TO_ENGLISH, WORKSPACE_DIR,
     SEARCH_SOURCE, PINTEREST_NUM_IMAGES, PINTEREST_MIN_RESOLUTION,
 )
@@ -69,7 +70,9 @@ def find_assets(scene: Scene) -> list[str]:
         log.warn(f"Scene {scene.id}: no queries available")
         return []
 
-    # Route to the configured primary source
+    downloaded: list[str] = []
+
+    # ── Primary source ────────────────────────────────────
     if SEARCH_SOURCE == "pinterest" and _PINTEREST_AVAILABLE:
         downloaded = _search_pinterest(scene, scene_dir, attempts)
         if downloaded:
@@ -77,7 +80,16 @@ def find_assets(scene: Scene) -> list[str]:
         log.info(f"Scene {scene.id}: Pinterest returned nothing, "
                  f"falling back to Wikimedia")
 
-    # Wikimedia fallback (works regardless of SEARCH_SOURCE if Pinterest missed)
+    elif SEARCH_SOURCE == "fbu" and _FBU_PATH:
+        log.info(f"Scene {scene.id}: trying fbu as primary source...")
+        downloaded = _try_fbu_download(scene, scene_dir)
+        if downloaded:
+            log.ok(f"Scene {scene.id}: {len(downloaded)} hits from fbu")
+            return downloaded
+        log.info(f"Scene {scene.id}: fbu returned nothing, "
+                 f"falling back to Wikimedia")
+
+    # ── Wikimedia (always the safety net) ─────────────────
     for label, query in attempts:
         log.info(f"Scene {scene.id} [wiki:{label}]: '{query}'")
         downloaded = _wikimedia_search(query, scene_dir, count=3)
@@ -85,10 +97,11 @@ def find_assets(scene: Scene) -> list[str]:
             log.ok(f"Scene {scene.id} [wiki:{label}]: {len(downloaded)} hits")
             return downloaded
 
-    # Last resort: fbu browser automation (disabled by default)
-    from config import ENABLE_FBU_FALLBACK
-    if ENABLE_FBU_FALLBACK and _FBU_PATH:
-        log.info(f"Scene {scene.id}: trying fbu fallback...")
+    # ── Last resort: fbu (only if not already tried above) ─
+    if (SEARCH_SOURCE != "fbu"
+            and ENABLE_FBU_FALLBACK
+            and _FBU_PATH):
+        log.info(f"Scene {scene.id}: trying fbu last resort...")
         downloaded = _try_fbu_download(scene, scene_dir)
         if downloaded:
             return downloaded
@@ -96,71 +109,191 @@ def find_assets(scene: Scene) -> list[str]:
     log.info(f"Scene {scene.id}: 0 candidates total")
     return []
 
-
 # ===============================================================
 # Pinterest (primary source)
 # ===============================================================
 
-def _search_pinterest(scene: Scene, out_dir: Path,
-                      attempts: list[tuple[str, str]]) -> list[str]:
+def _search_pinterest(
+    scene: Scene,
+    out_dir: Path,
+    attempts: list[tuple[str, str]],
+) -> list[str]:
     """
-    Search Pinterest using pinterest-dl and download top images.
+    Search Pinterest using the strongest query variants and merge results.
 
-    Uses API-mode (no browser needed, faster, no login required
-    for public content). Downloads to a temp dir, then renames
-    files to candidate_N.jpg for consistent downstream handling.
+    Strategy:
+    1. Search the exact/high-specificity query first.
+    2. Try the next meaningful query (usually English/Arabic equivalent).
+    3. Only use simplified queries if needed.
+    4. Merge results and remove duplicate images.
     """
     if not _PINTEREST_AVAILABLE:
         return []
 
-    # Use the first (best) attempt query
-    _, query = attempts[0]
-    log.info(f"Scene {scene.id} [pinterest]: '{query}'")
+    # Pinterest gets multiple meaningful queries instead of only attempts[0].
+    pinterest_attempts = _prioritize_pinterest_attempts(attempts)
 
-    tmp_dir = WORKSPACE_DIR / f"pinterest_scene_{scene.id:03d}"
-    if tmp_dir.exists():
-        shutil.rmtree(tmp_dir)
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-
-    try:
-        downloaded = PinterestDL.with_api().search_and_download(
-            query=query,
-            output_dir=str(tmp_dir),
-            num=PINTEREST_NUM_IMAGES,
-            min_resolution=PINTEREST_MIN_RESOLUTION,
-        )
-    except Exception as e:
-        log.warn(f"  Pinterest search failed: {e}")
-        # Try a simplified query as a second chance
-        simplified = _simplify_query(query)
-        if simplified and simplified.lower() != query.lower():
-            log.info(f"  Retrying Pinterest with: '{simplified}'")
-            try:
-                downloaded = PinterestDL.with_api().search_and_download(
-                    query=simplified,
-                    output_dir=str(tmp_dir),
-                    num=PINTEREST_NUM_IMAGES,
-                    min_resolution=PINTEREST_MIN_RESOLUTION,
-                )
-            except Exception as e2:
-                log.warn(f"  Pinterest retry failed: {e2}")
-                return []
-        else:
-            return []
-
-    if not downloaded:
-        log.info(f"  Pinterest: no results")
+    if not pinterest_attempts:
         return []
 
-    # Normalize filenames to candidate_N.jpg
-    results = _normalize_pinterest_files(tmp_dir, out_dir)
+    tmp_root = WORKSPACE_DIR / f"pinterest_scene_{scene.id:03d}"
+    if tmp_root.exists():
+        shutil.rmtree(tmp_root)
+    tmp_root.mkdir(parents=True, exist_ok=True)
+
+    results: list[str] = []
+    seen_hashes: set[str] = set()
+
+    try:
+        for index, (label, query) in enumerate(pinterest_attempts, start=1):
+            if len(results) >= FBU_MAX_CANDIDATES:
+                break
+
+            log.info(
+                f"Scene {scene.id} [pinterest:{label}]: '{query}'"
+            )
+
+            query_dir = tmp_root / f"search_{index}"
+            query_dir.mkdir(parents=True, exist_ok=True)
+
+            try:
+                downloaded = PinterestDL.with_api().search_and_download(
+                    query=query,
+                    output_dir=str(query_dir),
+                    num=min(
+                        PINTEREST_NUM_IMAGES,
+                        max(FBU_MAX_CANDIDATES * 2, 8),
+                    ),
+                    min_resolution=PINTEREST_MIN_RESOLUTION,
+                )
+            except Exception as e:
+                log.warn(
+                    f"  Pinterest search failed for '{query}': {e}"
+                )
+                continue
+
+            if not downloaded:
+                log.info("  Pinterest: no results")
+                continue
+
+            images = [
+                p for p in query_dir.rglob("*")
+                if p.is_file()
+                and p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
+            ]
+
+            added = 0
+
+            for src in images:
+                if len(results) >= FBU_MAX_CANDIDATES:
+                    break
+
+                try:
+                    if src.stat().st_size < 5000:
+                        continue
+
+                    # Content hash removes duplicates returned by
+                    # multiple Pinterest queries.
+                    file_hash = hashlib.sha1(
+                        src.read_bytes()
+                    ).hexdigest()
+
+                    if file_hash in seen_hashes:
+                        continue
+
+                    seen_hashes.add(file_hash)
+
+                    ext = src.suffix.lower()
+                    if ext == ".jpeg":
+                        ext = ".jpg"
+
+                    dest = out_dir / (
+                        f"candidate_{len(results) + 1}{ext}"
+                    )
+
+                    shutil.copy2(src, dest)
+                    results.append(str(dest))
+                    added += 1
+
+                    log.info(
+                        f"  ↓ {dest.name} "
+                        f"({src.stat().st_size // 1024} KB)"
+                    )
+
+                except Exception as e:
+                    log.debug(
+                        f"  Skipping Pinterest file {src.name}: {e}"
+                    )
+
+            log.info(
+                f"  Pinterest query '{label}': "
+                f"{added} new image(s)"
+            )
+
+    finally:
+        try:
+            shutil.rmtree(tmp_root)
+        except Exception:
+            pass
+
     if results:
-        log.ok(f"Scene {scene.id} [pinterest]: {len(results)} hits")
+        log.ok(
+            f"Scene {scene.id} [pinterest]: "
+            f"{len(results)} unique hits"
+        )
     else:
         log.info(f"Scene {scene.id} [pinterest]: 0 usable images")
+
     return results
+def _prioritize_pinterest_attempts(
+    attempts: list[tuple[str, str]],
+) -> list[tuple[str, str]]:
+    """
+    Keep Pinterest queries specific.
 
+    Priority:
+      raw Arabic/English query
+      simplified query
+      short query only as a final fallback
 
+    The important difference is that we do NOT immediately reduce a
+    highly-specific historical query to 2 generic words.
+    """
+    prioritized: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    # First: raw queries only.
+    for label, query in attempts:
+        if ":raw" not in label:
+            continue
+
+        key = query.strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            prioritized.append((label, query))
+
+    # Second: simplified queries.
+    for label, query in attempts:
+        if ":simplified" not in label:
+            continue
+
+        key = query.strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            prioritized.append((label, query))
+
+    # Last resort: 2-word queries.
+    for label, query in attempts:
+        if ":short" not in label:
+            continue
+
+        key = query.strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            prioritized.append((label, query))
+
+    # Don't hammer Pinterest with unnecessary variants.
+    return prioritized[:4]
 def _normalize_pinterest_files(src_dir: Path, dest_dir: Path) -> list[str]:
     """
     Rename pinterest-dl output files to candidate_1.jpg, candidate_2.jpg, ...
@@ -248,15 +381,17 @@ def _build_query_attempts(scene: Scene) -> list[tuple[str, str]]:
 
 
 def _simplify_query(query: str) -> str:
-    """Strip stop words and keep 2-4 meaningful keywords."""
+    """Remove obvious noise while preserving historical entities."""
     cleaned = re.sub(r"[^\w\s\u0600-\u06FF]", " ", query)
     tokens = cleaned.split()
+
     meaningful = [
         t for t in tokens
         if t.lower() not in STOP_WORDS and len(t) > 1
     ]
-    return " ".join(meaningful[:4])
 
+    # Keep up to 5 keywords so proper names + historical context survive.
+    return " ".join(meaningful[:5])
 
 # ===============================================================
 # Wikimedia fallback

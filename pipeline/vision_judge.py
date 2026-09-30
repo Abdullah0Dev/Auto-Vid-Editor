@@ -4,7 +4,7 @@ import re
 
 from config import MODEL_VISION, VISION_FALLBACK_TO_FIRST
 from models.types import Scene
-from utils.ollama_client import chat
+from utils.llm_client import chat
 from utils.logger import log
 
 
