@@ -74,14 +74,31 @@ class PreviewServer:
                 if err:
                     return jsonify({"error": err}), 400
 
+            # ── Ken Burns / importance ────────────────────
             if "ken_burns" in data:
                 scene.ken_burns = str(data["ken_burns"])
             if "is_important" in data:
                 scene.is_important = bool(data["is_important"])
+
+            # ── Fit mode (cover / contain) ────────────────
             if "fit_mode" in data:
-                            fm = str(data["fit_mode"])
-                            if fm in ("contain", "cover"):
-                                scene.fit_mode = fm
+                fm = str(data["fit_mode"])
+                if fm in ("contain", "cover"):
+                    scene.fit_mode = fm
+
+            # ── Fit offsets (object-position X/Y in 0–100) ─
+            if "fit_offset_x" in data or "fit_offset_y" in data:
+                try:
+                    ox = float(data.get("fit_offset_x",
+                                        getattr(scene, "fit_offset_x", 50.0)))
+                    oy = float(data.get("fit_offset_y",
+                                        getattr(scene, "fit_offset_y", 50.0)))
+                except (TypeError, ValueError):
+                    return jsonify({"error": "invalid offset"}), 400
+                # Clamp so a bad client can't poison the renderer
+                scene.fit_offset_x = max(0.0, min(100.0, ox))
+                scene.fit_offset_y = max(0.0, min(100.0, oy))
+
             return jsonify({"ok": True, "scene": self._to_dict(scene)})
 
         @app.route("/api/proceed", methods=["POST"])
@@ -109,7 +126,9 @@ class PreviewServer:
             "arabic_query": s.arabic_query, "english_query": s.english_query,
             "audio_note": s.audio_note,
             "is_important": s.is_important, "ken_burns": s.ken_burns,
-            "fit_mode": s.fit_mode, 
+            "fit_mode": getattr(s, "fit_mode", "contain"),
+            "fit_offset_x": getattr(s, "fit_offset_x", 50.0),
+            "fit_offset_y": getattr(s, "fit_offset_y", 50.0),
             "chosen_asset": s.chosen_asset, "candidates": s.candidates,
             "chosen_url": self._asset_url(s),
         }

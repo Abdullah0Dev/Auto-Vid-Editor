@@ -5,10 +5,13 @@
 
 1. improve the images finder to get better matching images 
 2. split the series into actions screenshots and clips to use it easily.. and maybe make separate saas
-3. able to resize the image when I make it cover I can make it a bit at the top/bottom with dragging
-4. connect the graphics to the editors and make it easy to AI use it and make changes in the template and maybe request match exact data or soo.. 
-5. optionally make the graphics have inital animation for mid look.. so initital animation can be disabled
+__
+4. able to resize the image when I make it cover I can make it a bit at the top/bottom with dragging
+5. connect the graphics to the editors and make it easy to AI use it and make changes in the template and maybe request match exact data or soo.. 
 6. work on the audio and add effects and soo 
 7. if needed => adding effects or bg ahat/nashed(need to think)
 8. final export work and optimization
 9. deploy or setup-easy use
+
+___
+9.  optionally make the graphics have inital animation for mid look.. so initital animation can be disabled

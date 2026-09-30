@@ -9,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* palette */
     --emerald:  #0B3D2E;
     --navy:     #0F1B2D;
     --gold:     #C9A227;
@@ -21,7 +20,6 @@
     --ivory:    #FAF7F0;
     --copper:   #B87333;
 
-    /* derived */
     --bg-deep:      #061a13;
     --bg-panel:     #0a2a20;
     --bg-panel-2:   #0d3326;
@@ -146,7 +144,7 @@
   }
   .proceed-btn .arrow {
     font-size: 18px;
-    transform: scaleX(-1); /* RTL flip */
+    transform: scaleX(-1);
   }
 
   /* ══════════ MAIN GRID ══════════ */
@@ -192,6 +190,65 @@
     padding: 40px;
     line-height: 2;
   }
+
+  /* ─── Draggable stage (cover mode only) ─── */
+  .stage-inner.draggable img,
+  .stage-inner.draggable video {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: none;
+    touch-action: none;
+  }
+  .stage-inner.dragging img,
+  .stage-inner.dragging video {
+    cursor: grabbing;
+  }
+
+  /* Hint chip shown briefly when entering cover mode */
+  .drag-hint {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(4, 18, 13, 0.85);
+    border: 1px solid var(--border-hard);
+    color: var(--gold);
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s;
+    z-index: 5;
+  }
+  .drag-hint.show { opacity: 1; }
+
+  /* Reset-position button — appears only when offset ≠ centered */
+  .reset-pos {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(4, 18, 13, 0.85);
+    border: 1px solid var(--border-hard);
+    color: var(--gold);
+    font-family: 'Cairo', sans-serif;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: none;
+    z-index: 5;
+    align-items: center;
+    gap: 5px;
+  }
+  .reset-pos.show { display: flex; }
+  .reset-pos:hover {
+    background: rgba(201,162,39,0.15);
+    border-color: var(--gold);
+  }
+
   /* video controls bar */
   .stage-controls {
     height: 54px;
@@ -463,7 +520,6 @@
   }
   .kw-full.copied .copy-icon { color: #7ad9b5; }
 
-  /* Fit toggle in the stage controls */
   .fit-toggle {
     font-family: 'Reem Kufi', sans-serif;
     font-size: 11px;
@@ -496,7 +552,7 @@
     opacity: 0.4;
   }
   .fit-toggle.active .dot { opacity: 1; }
- 
+
   .kw-list {
     display: flex; flex-direction: column;
     gap: 6px;
@@ -898,27 +954,25 @@
 <!-- ══════════ MAIN ══════════ -->
 <main>
 
-  <!-- Big preview -->
   <section class="stage">
     <div class="stage-inner" id="stageInner">
       <div class="stage-empty">جارٍ التحميل…</div>
     </div>
-  <div class="stage-controls">
-  <div class="ctrl-icon" id="playBtn">▶</div>
-  <div class="time-code" id="timecode">00:00 / 00:00</div>
-  <div class="progress-bar">
-    <div class="progress-fill"></div>
-    <div class="progress-knob"></div>
-  </div>
-  <button class="fit-toggle" id="fitToggle" title="طريقة العرض في المعاينة فقط">
-    <span class="dot"></span>
-    <span id="fitLabel">ملء الإطار</span>
-  </button>
-  <div class="ctrl-icon" title="ملء الشاشة">⛶</div>
-</div>
+    <div class="stage-controls">
+      <div class="ctrl-icon" id="playBtn">▶</div>
+      <div class="time-code" id="timecode">00:00 / 00:00</div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+        <div class="progress-knob"></div>
+      </div>
+      <button class="fit-toggle" id="fitToggle" title="طريقة العرض في المعاينة فقط">
+        <span class="dot"></span>
+        <span id="fitLabel">ملء الإطار</span>
+      </button>
+      <div class="ctrl-icon" title="ملء الشاشة">⛶</div>
+    </div>
   </section>
 
-  <!-- Middle: candidate options -->
   <section class="candidates">
     <div class="section-head">
       <span class="icon">▦</span>
@@ -927,7 +981,6 @@
     <div class="cand-list" id="candList"></div>
   </section>
 
-  <!-- Right: scene details -->
   <section class="details">
     <div class="section-head">
       <span class="icon">☰</span>
@@ -977,8 +1030,7 @@
 let state = { scenes: [], context: {}, timeout_seconds: 1200 };
 let currentIdx = 0;
 let timeoutAt = null;
-// fit mode: 'contain' (letterbox, default) or 'cover' (fill frame)
- 
+
 const $ = (id) => document.getElementById(id);
 const fmt = (s) => {
   const m = Math.floor(s / 60), sec = Math.floor(s % 60);
@@ -1002,7 +1054,6 @@ async function copyToClipboard(text) {
     }
   } catch (e) { /* fall through */ }
 
-  // Fallback for non-HTTPS or older browsers
   try {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -1017,6 +1068,7 @@ async function copyToClipboard(text) {
     return false;
   }
 }
+
 // ═══════════════════════════════════════════════════
 // Load / render
 // ═══════════════════════════════════════════════════
@@ -1042,37 +1094,202 @@ function renderStage() {
   const dur = s.end - s.start;
   $('timecode').textContent = `00:00 / ${fmt(dur)}`;
 
+  // Reset any leftover interaction state from the previous scene
+  inner.classList.remove('draggable', 'dragging');
+  inner.querySelectorAll('.reset-pos, .drag-hint').forEach(el => el.remove());
+
   if (!src) {
     inner.innerHTML = `<div class="stage-empty">لا توجد صورة لهذا المشهد.<br>اختر من الخيارات أو أضف رابطاً مخصصاً.</div>`;
+    syncFitToggle();
     return;
   }
 
   const fit = s.fit_mode === 'cover' ? 'cover' : 'contain';
-  const fitCss = `object-fit: ${fit}; width: 100%; height: 100%;`;
+  const ox = (s.fit_offset_x ?? 50);
+  const oy = (s.fit_offset_y ?? 50);
+  const posCss = `object-position: ${ox}% ${oy}%;`;
+  const fitCss = `object-fit: ${fit}; width: 100%; height: 100%; ${posCss}`;
   const isVideo = /\.(mp4|webm|mov|m4v)$/i.test(src);
 
   if (isVideo) {
-    inner.innerHTML = `<video src="${src}" controls autoplay muted loop style="${fitCss}"></video>`;
+    inner.innerHTML = `<video src="${src}" controls autoplay muted loop playsinline style="${fitCss}"></video>`;
   } else {
     inner.innerHTML = `<img src="${src}" alt="" style="${fitCss}">`;
   }
 
-  // Update fit toggle label to match this scene
+  // Reset-position button (only in cover mode when not centered)
+  if (fit === 'cover' && (ox !== 50 || oy !== 50)) {
+    const rb = document.createElement('button');
+    rb.className = 'reset-pos show';
+    rb.innerHTML = '⟲ توسيط';
+    rb.onclick = (e) => { e.stopPropagation(); resetPosition(); };
+    inner.appendChild(rb);
+  }
+
+  syncFitToggle();
+  attachDragHandlers();
+}
+
+function syncFitToggle() {
+  const s = state.scenes[currentIdx];
   const btn = $('fitToggle');
   const label = $('fitLabel');
-  if (btn && label) {
-    const isCover = s.fit_mode === 'cover';
-    btn.classList.toggle('active', isCover);
-    label.textContent = isCover ? 'ملء الإطار' : 'الحجم الأصلي';
-  }
+  if (!btn || !label || !s) return;
+  const isCover = s.fit_mode === 'cover';
+  btn.classList.toggle('active', isCover);
+  label.textContent = isCover ? 'ملء الإطار' : 'الحجم الأصلي';
 }
+
+// ── Drag-to-reposition (cover mode only) ─────────────────
+function attachDragHandlers() {
+  const inner = $('stageInner');
+  const el = inner.querySelector('img, video');
+  const s = state.scenes[currentIdx];
+  if (!el || !s) return;
+
+  // Only active in cover mode
+  if (s.fit_mode !== 'cover') {
+    inner.classList.remove('draggable');
+    return;
+  }
+  inner.classList.add('draggable');
+
+  const isVid = el.tagName === 'VIDEO';
+  if (isVid && (!el.videoWidth || !el.videoHeight)) {
+    el.addEventListener('loadedmetadata', attachDragHandlers, { once: true });
+    return;
+  }
+  if (!isVid && (!el.naturalWidth || !el.naturalHeight)) {
+    el.addEventListener('load', attachDragHandlers, { once: true });
+    return;
+  }
+
+  // Prevent native image drag ghost
+  el.addEventListener('dragstart', e => e.preventDefault());
+  el.draggable = false;
+
+  // Cache overflow in pixels once — container size is stable
+  const cw = inner.clientWidth;
+  const ch = inner.clientHeight;
+  const iw = isVid ? el.videoWidth  : el.naturalWidth;
+  const ih = isVid ? el.videoHeight : el.naturalHeight;
+  const sc = Math.max(cw / iw, ch / ih);   // cover scale
+  const ovx = Math.max(0, iw * sc - cw);   // horizontal overflow (px)
+  const ovy = Math.max(0, ih * sc - ch);   // vertical overflow  (px)
+
+  let dragging = false;
+  let startX = 0, startY = 0;
+  let startOX = s.fit_offset_x ?? 50;
+  let startOY = s.fit_offset_y ?? 50;
+  let moved = false;
+
+  const onDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    dragging = true;
+    moved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    const parts = (el.style.objectPosition || '50% 50%').split(/\s+/);
+    startOX = parseFloat(parts[0]) || 50;
+    startOY = parseFloat(parts[1]) || 50;
+    inner.classList.add('dragging');
+    try { el.setPointerCapture?.(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  };
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+
+    // Drag right → view shifts left → X% decreases
+    let nx = startOX;
+    let ny = startOY;
+    if (ovx > 1) nx = startOX - (100 * dx) / ovx;
+    if (ovy > 1) ny = startOY - (100 * dy) / ovy;
+    nx = Math.max(0, Math.min(100, nx));
+    ny = Math.max(0, Math.min(100, ny));
+
+    el.style.objectPosition = `${nx}% ${ny}%`;
+  };
+
+  const onUp = async (e) => {
+    if (!dragging) return;
+    dragging = false;
+    inner.classList.remove('dragging');
+    try { el.releasePointerCapture?.(e.pointerId); } catch (_) {}
+
+    if (!moved) return;
+
+    const parts = el.style.objectPosition.split(/\s+/);
+    const nx = Math.max(0, Math.min(100, parseFloat(parts[0])));
+    const ny = Math.max(0, Math.min(100, parseFloat(parts[1])));
+    s.fit_offset_x = nx;
+    s.fit_offset_y = ny;
+
+    // Show the reset button if we're no longer centered
+    let rb = inner.querySelector('.reset-pos');
+    if (!rb && (nx !== 50 || ny !== 50)) {
+      rb = document.createElement('button');
+      rb.className = 'reset-pos show';
+      rb.innerHTML = '⟲ توسيط';
+      rb.onclick = (ev) => { ev.stopPropagation(); resetPosition(); };
+      inner.appendChild(rb);
+    } else if (rb && nx === 50 && ny === 50) {
+      rb.classList.remove('show');
+    }
+
+    try {
+      await fetch(`/api/scene/${s.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fit_offset_x: nx, fit_offset_y: ny }),
+      });
+    } catch (err) {
+      toast('فشل حفظ الموضع', 'err');
+    }
+  };
+
+  el.addEventListener('pointerdown', onDown);
+  el.addEventListener('pointermove', onMove);
+  el.addEventListener('pointerup', onUp);
+  el.addEventListener('pointercancel', onUp);
+
+  // Double-click = reset to center
+  el.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    resetPosition();
+  });
+}
+
+async function resetPosition() {
+  const inner = $('stageInner');
+  const el = inner.querySelector('img, video');
+  const s = state.scenes[currentIdx];
+  if (!el || !s) return;
+
+  el.style.objectPosition = '50% 50%';
+  s.fit_offset_x = 50;
+  s.fit_offset_y = 50;
+
+  inner.querySelector('.reset-pos')?.classList.remove('show');
+
+  try {
+    await fetch(`/api/scene/${s.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fit_offset_x: 50, fit_offset_y: 50 }),
+    });
+  } catch (_) {}
+}
+
 function renderCandidates() {
   const s = state.scenes[currentIdx];
   if (!s) return;
   const list = $('candList');
 
-  const cands = (s.candidates || []).map((c, i) => {
-    // candidate path -> asset URL
+  const cands = (s.candidates || []).map((c) => {
     const filename = c.split('/').pop();
     const url = `/asset/${s.id}/${filename}`;
     const active = (s.chosen_asset === c) ? 'active' : '';
@@ -1151,7 +1368,6 @@ function renderDetails() {
     </div>
   `;
 
-  // Wire up keyword copy
   body.querySelectorAll('.kw-full').forEach(el => {
     el.onclick = () => {
       const text = el.dataset.copy;
@@ -1168,7 +1384,6 @@ function renderDetails() {
     };
   });
 
-  // Inline URL handler
   $('inlineApply').onclick = () => {
     const url = $('inlineUrl').value.trim();
     if (url) applyCustomUrl(url, 'inlineMsg');
@@ -1184,6 +1399,7 @@ function renderDetails() {
     }
   });
 }
+
 function renderTimeline() {
   const tl = $('timeline');
   tl.innerHTML = state.scenes.map((s, i) => {
@@ -1217,7 +1433,6 @@ function goTo(idx) {
   if (idx < 0 || idx >= state.scenes.length) return;
   currentIdx = idx;
   renderAll();
-  // Scroll timeline thumb into view
   const active = document.querySelector('.thumb.active');
   if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
@@ -1286,7 +1501,6 @@ $('modalConfirm').onclick = () => {
   const url = $('modalInput').value.trim();
   if (!url) return;
   closeModal();
-  // Apply to current scene with inline message
   const s = state.scenes[currentIdx];
   fetch(`/api/scene/${s.id}`, {
     method: 'POST',
@@ -1326,8 +1540,8 @@ setInterval(() => {
 // ═══════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
-  if (e.key === 'ArrowLeft')  goTo(currentIdx + 1); // RTL: left goes forward
-  if (e.key === 'ArrowRight') goTo(currentIdx - 1); // RTL: right goes back
+  if (e.key === 'ArrowLeft')  goTo(currentIdx + 1);
+  if (e.key === 'ArrowRight') goTo(currentIdx - 1);
   if (e.key === 'Escape')     closeModal();
 });
 
@@ -1336,21 +1550,23 @@ document.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════════════
 $('proceedBtn').onclick = proceed;
 $('playBtn').onclick = () => {
-  const v = document.querySelector('video');
+  const v = document.querySelector('#stageInner video');
   if (v) v.paused ? v.play() : v.pause();
 };
-// Fit toggle — now per-scene and persistent
+
+// Fit toggle — per-scene, now triggers re-render so dragging activates
 $('fitToggle').onclick = async () => {
   const s = state.scenes[currentIdx];
   if (!s) return;
 
   const newMode = (s.fit_mode === 'cover') ? 'contain' : 'cover';
-
-  // Optimistic update
   s.fit_mode = newMode;
+
+  // First time entering cover mode, show the drag hint
+  if (newMode === 'cover') showDragHint();
+
   renderStage();
 
-  // Persist to server
   const r = await fetch(`/api/scene/${s.id}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1358,15 +1574,25 @@ $('fitToggle').onclick = async () => {
   });
   if (!r.ok) {
     toast('فشل حفظ الإعداد', 'err');
-    // Revert on failure
     s.fit_mode = (newMode === 'cover') ? 'contain' : 'cover';
     renderStage();
   }
 };
- 
 
-// Set initial label
-$('fitLabel').textContent = 'الحجم الأصلي';
+function showDragHint() {
+  const inner = $('stageInner');
+  if (inner.querySelector('.drag-hint')) return;
+  const h = document.createElement('div');
+  h.className = 'drag-hint';
+  h.textContent = 'اسحب الصورة لتحريك الإطار — انقر مرتين للتوسيط';
+  inner.appendChild(h);
+  requestAnimationFrame(() => h.classList.add('show'));
+  setTimeout(() => {
+    h.classList.remove('show');
+    setTimeout(() => h.remove(), 300);
+  }, 3200);
+}
+
 loadState();
 </script>
 </body>

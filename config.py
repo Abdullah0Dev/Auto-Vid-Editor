@@ -63,17 +63,33 @@ else:   # ollama (default)
     MODEL_ORCHESTRATOR = OLLAMA_ORCHESTRATOR
     MODEL_VISION       = OLLAMA_VISION
 
-
 # ═══════════════════════════════════════════════════════════
 #  Asset search
 # ═══════════════════════════════════════════════════════════
-SEARCH_QUERY_PREFERENCE   = "arabic"    # "arabic" | "english" | "both"
-SEARCH_FALLBACK_TO_ENGLISH = True
-SEARCH_SOURCE             = "pinterest" # "pinterest" | "wikimedia" | "fbu"
+SEARCH_QUERY_PREFERENCE     = "arabic"     # "arabic" | "english" | "both"
+SEARCH_FALLBACK_TO_ENGLISH  = True
 
-PINTEREST_NUM_IMAGES       = 4
-PINTEREST_MIN_RESOLUTION   = (512, 512)
+# ── Pinterest (browser mode) ──────────────────────────────
+PINTEREST_NUM_IMAGES        = 20           # how many to *consider*
+PINTEREST_MIN_RESOLUTION    = (512, 512)   # (width, height) floor
+PINTEREST_SCROLL_ROUNDS     = 6            # infinite-scroll passes
+PINTEREST_COOKIES_FILE      = "cookies.json"  # exported from browser
+PINTEREST_HEADLESS         = True         # set False to debug
 
+# ── Relevance filtering (CLIP) ────────────────────────────
+ENABLE_CLIP_FILTER          = True
+CLIP_MODEL_NAME             = "clip-ViT-B-32"
+CLIP_MIN_SIMILARITY         = 0.22
+CLIP_TOP_K                  = 4            # final candidates per scene
+
+# ── Dedup ─────────────────────────────────────────────────
+ENABLE_PHASH_DEDUP          = True
+PHASH_HAMMING_THRESHOLD     = 6
+
+# ── Wikimedia ─────────────────────────────────────────────
+WIKIMEDIA_RESULT_COUNT      = 6
+WIKIMEDIA_MIN_WIDTH          = 800
+WIKIMEDIA_MIN_HEIGHT         = 500
 
 # ═══════════════════════════════════════════════════════════
 #  Human preview (web UI)
