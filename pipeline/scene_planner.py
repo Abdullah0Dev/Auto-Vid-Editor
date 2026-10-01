@@ -32,7 +32,7 @@ OUTPUT SCHEMA (one object, no markdown fences):
       "start": <float seconds>,
       "end": <float seconds>,
       "text": "<verbatim transcript text for this scene>",
-      "visual_type": "image",
+      "visual_type": "image|graphic",
       "arabic_query": "<3-8 Arabic words describing a VISIBLE thing>",
       "english_query": "<3-8 English words, Wikimedia-Commons-friendly>",
       "audio_note": "<e.g. 'low ambient music', 'silence', 'oud underscore'>",
@@ -50,6 +50,7 @@ SCENE RULES
 4. `start`/`end` MUST fall inside the chunk window given by the user.
    Do NOT restart numbering at 0. Keep ids continuous.
 5. `is_important` = true ONLY for: دعاء، رثاء، تعجب، أو نقطة تحول درامية.
+6. QURAN/HADITH/POETRY/DUA or someone talking important stuff MAKE SURE IT'S IN ONE SCENE
 
 CONTENT_TYPE — choose exactly ONE per scene. Used to trigger audio FX downstream:
   • "quran"     → triggers Quran recitation layer.
@@ -61,20 +62,54 @@ CONTENT_TYPE — choose exactly ONE per scene. Used to trigger audio FX downstre
   • "dua"       → triggers soft supplication bed.
                   Detect: starts with "اللهم", "ربنا", "سبحان", "لا حول ولا قوة".
   • "narration" → everything else (author's voice, explanation, story). DEFAULT.
+VISUAL TYPE
 
-QUERY RULES (image search, NOT translation of the narration):
-- Describe something VISIBLE: object, place, architecture, artifact, mood.
-- Anchor to GLOBAL CONTEXT era/region (dynasty, city, century).
-- Concrete nouns only. No abstract concepts, no verbs of feeling.
-- 3-8 words per query.
-- For emotional/abstract scenes, use MOOD queries
-  (e.g. "candlelit mosque interior", "old manuscript on wooden desk").
+Use "graphic" when the scene benefits from a self-contained Remotion graphic.
 
-BAD → GOOD examples:
-  ✗ "Allah is the best disposer of affairs"  → ✓ "الله اكبر"
-  ✗ "Author biography born 673"              → ✓ "medieval Islamic scholar portrait artwork"
-  ✗ "Imam Muhammad ibn Ahmad"                → ✓ "الامام الذهبي"
+Use "graphic" for:
+- Quranic passages
+- Hadith
+- Classical poetry
+- Direct scholarly quotes
+- Historical figure introductions
+- Named battles / conquests
+- Geography / journeys / routes
+- Clear numerical statistics
+- Dua / short Arabic emphasis
+- Strong informational beats where typography or structured graphics
+  communicate better than a photograph
 
+Use "image" for:
+- Generic narration
+- Landscape / atmosphere
+- Architecture / artifact shots
+- Descriptive scenes
+- Mood
+- Generic historical context
+- Scenes where the visual subject is primarily a photograph/painting
+
+IMPORTANT:
+Do not make every Arabic sentence a graphic.
+Graphics should be intentional visual beats.
+
+CONTENT_TYPE:
+
+quran:
+  Quran quotation / ayah content
+
+hadith:
+  Hadith / Prophet ﷺ narration
+
+poetry:
+  Classical poetry / بيت شعر
+
+dua:
+  Supplication / devotional phrase
+
+narration:
+  Everything else
+
+The transcript text MUST remain verbatim.
 KEN_BURNS — vary across consecutive scenes. Never repeat the same value 3× in a row.
 
 OUTPUT: JSON only. No explanations. No ``` fences.
@@ -267,7 +302,14 @@ def _try_parse_json(text: str) -> dict | None:
     return None
 
 VALID_CONTENT_TYPES = {"narration", "quran", "hadith", "poetry", "dua"}
-
+VALID_VISUAL_TYPES = {"image", "graphic"}
+VALID_CONTENT_TYPES = {
+    "narration",
+    "quran",
+    "hadith",
+    "poetry",
+    "dua",
+}
 def _build_scenes(plan: dict) -> list[Scene]:
     scenes = []
     for i, s in enumerate(plan.get("scenes", []), start=1):
@@ -288,7 +330,14 @@ def _build_scenes(plan: dict) -> list[Scene]:
             end = float(s["end"])
             if end <= start:
                 continue
+            visual_type = (
+                str(s.get("visual_type", "image"))
+                .strip()
+                .lower()
+            )
 
+            if visual_type not in VALID_VISUAL_TYPES:
+                visual_type = "image"
             # Parse content_type safely
             content_type = str(s.get("content_type", "narration")).lower().strip()
             if content_type not in VALID_CONTENT_TYPES:
@@ -299,7 +348,7 @@ def _build_scenes(plan: dict) -> list[Scene]:
                 start=start,
                 end=end,
                 text=text,
-                visual_type=s.get("visual_type", "image"),
+                visual_type=visual_type,
                 arabic_query=arabic_q,
                 english_query=english_q,
                 audio_note=(s.get("audio_note") or "low ambient music"),
@@ -378,56 +427,132 @@ def _sanitize_scenes(scenes: list[Scene]) -> list[Scene]:
     return out
 
 
-def _merge_short_scenes(scenes: list[Scene]) -> list[Scene]:
+def _merge_short_scenes(
+    scenes: list[Scene],
+) -> list[Scene]:
+
     if not scenes:
         return scenes
 
     merged: list[Scene] = []
+
     buffer: list[Scene] = []
     buffer_duration = 0.0
 
-    def flush():
-        nonlocal buffer, buffer_duration
+    def flush() -> None:
+        nonlocal buffer
+        nonlocal buffer_duration
+
         if not buffer:
             return
+
         first = buffer[0]
-        arabic_q = max((s.arabic_query for s in buffer if s.arabic_query),
-                       key=len, default="")
-        english_q = max((s.english_query for s in buffer if s.english_query),
-                        key=len, default="")
-        # Prefer the most "special" content type — if any segment is
-        # quran/hadith/poetry/dua, the merged scene keeps that type.
-        special = next(
-            (s.content_type for s in buffer
-             if s.content_type != "narration"),
-            "narration",
+
+        arabic_q = max(
+            (
+                s.arabic_query
+                for s in buffer
+                if s.arabic_query
+            ),
+            key=len,
+            default="",
         )
-        merged.append(Scene(
-            id=first.id,
-            start=first.start,
-            end=buffer[-1].end,
-            text=" ".join(s.text for s in buffer),
-            visual_type=first.visual_type,
-            arabic_query=arabic_q,
-            english_query=english_q,
-            audio_note=first.audio_note,
-            is_important=any(s.is_important for s in buffer),
-            ken_burns=first.ken_burns,
-            content_type=special,     # ← added
-        ))
+
+        english_q = max(
+            (
+                s.english_query
+                for s in buffer
+                if s.english_query
+            ),
+            key=len,
+            default="",
+        )
+
+        special_types = [
+            s.content_type
+            for s in buffer
+            if s.content_type != "narration"
+        ]
+
+        content_type = (
+            special_types[0]
+            if special_types
+            else first.content_type
+        )
+
+        merged.append(
+            Scene(
+                id=first.id,
+                start=first.start,
+                end=buffer[-1].end,
+                text=" ".join(
+                    s.text for s in buffer
+                ),
+                visual_type=first.visual_type,
+                arabic_query=arabic_q,
+                english_query=english_q,
+                audio_note=first.audio_note,
+                is_important=any(
+                    s.is_important
+                    for s in buffer
+                ),
+                ken_burns=first.ken_burns,
+                content_type=content_type,
+            )
+        )
+
         buffer = []
         buffer_duration = 0.0
 
-    for s in scenes:
-        buffer.append(s)
-        buffer_duration += s.end - s.start
+    for scene in scenes:
+
+        # Never merge different visual modes.
+        if (
+            buffer
+            and scene.visual_type
+            != buffer[-1].visual_type
+        ):
+            flush()
+
+        # Never merge different semantic content types
+        # when either side is a special type.
+        if (
+            buffer
+            and scene.content_type
+            != buffer[-1].content_type
+            and (
+                scene.content_type != "narration"
+                or buffer[-1].content_type != "narration"
+            )
+        ):
+            flush()
+
+        duration = (
+            scene.end - scene.start
+        )
+
+        # Don't create scenes bigger than MAX_SCENE_DURATION.
+        if (
+            buffer
+            and buffer_duration + duration
+            > MAX_SCENE_DURATION
+        ):
+            flush()
+
+        buffer.append(scene)
+        buffer_duration += duration
+
         if buffer_duration >= MIN_SCENE_DURATION:
             flush()
 
     flush()
-    log.info(f"Merged short scenes: {len(scenes)} → {len(merged)}")
-    return merged
 
+    log.info(
+        f"Merged short scenes: "
+        f"{len(scenes)} → {len(merged)}"
+    )
+
+    return merged
 def _ensure_full_coverage(scenes: list[Scene],
                           video_duration: float) -> list[Scene]:
     """

@@ -12,12 +12,12 @@ _client = None
 def _get_client():
     global _client
     if _client is None:
-        if not GEMINI_API_KEY:
-            raise RuntimeError(
-                "GEMINI_API_KEY not set. Add it to .env or pass --api-key."
-            )
+        # if not GEMINI_API_KEY:
+        #     raise RuntimeError(
+        #         "GEMINI_API_KEY not set. Add it to .env or pass --api-key."
+        #     )
         from google import genai
-        _client = genai.Client(api_key=GEMINI_API_KEY)
+        _client = genai.Client()
     return _client
 
 

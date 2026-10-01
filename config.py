@@ -4,8 +4,31 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+PROJECT_ROOT = Path(__file__).resolve().parent
 
 # ═══════════════════════════════════════════════════════════
+# B-Roll searcher
+# ═══════════════════════════════════════════════════════════
+
+# ===============================================================
+# Local B-roll vector catalog
+# ===============================================================
+
+VECTOR_ENABLED = True
+
+VECTOR_DB_PATH = PROJECT_ROOT / "data" / "clips.db"
+
+VECTOR_CLIPS_DIR = PROJECT_ROOT / "assets" / "clips"
+
+VECTOR_MODEL_NAME = "BAAI/bge-m3"
+
+VECTOR_TOP_K = 5
+
+# cosine distance:
+# 0.0 = extremely similar
+# higher = less relevant
+VECTOR_MAX_DISTANCE = 0.70
+
 #  Paths
 # ═══════════════════════════════════════════════════════════
 FFMPEG = "ffmpeg"
@@ -68,6 +91,15 @@ else:   # ollama (default)
 # ═══════════════════════════════════════════════════════════
 SEARCH_QUERY_PREFERENCE     = "arabic"     # "arabic" | "english" | "both"
 SEARCH_FALLBACK_TO_ENGLISH  = True
+
+# ═══════════════════════════════════════════════════════════
+#  Remotion
+# ═══════════════════════════════════════════════════════════
+REMOTION_DIR = PROJECT_ROOT / "remotion"
+GRAPHIC_FPS        = 30
+GRAPHIC_CACHE_DIR = PROJECT_ROOT / "cache" / "graphics"
+ENABLE_GRAPHICS    = True                    # global kill switch
+GRAPHIC_MAX_DURATION = 20.0                  # seconds; safety cap
 
 # ── Pinterest (browser mode) ──────────────────────────────
 PINTEREST_NUM_IMAGES        = 20           # how many to *consider*

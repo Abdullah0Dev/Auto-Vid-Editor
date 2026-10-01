@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>مراجعة المشاهد — محرر الفيديو التاريخي</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
   :root {
     --emerald:  #0B3D2E;
@@ -28,15 +31,27 @@
     --shadow:       0 8px 32px rgba(0,0,0,0.55);
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body {
-    background: radial-gradient(ellipse at 20% 0%, #0d362a 0%, var(--bg-deep) 60%);
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    background: radial-gradient(
+      ellipse at 20% 0%,
+      #0d362a 0%,
+      var(--bg-deep) 60%
+    );
+
     color: var(--ivory);
     font-family: 'Cairo', 'Noto Naskh Arabic', system-ui, sans-serif;
     height: 100vh;
     overflow: hidden;
     direction: rtl;
   }
+
   body {
     display: grid;
     grid-template-rows: 84px 1fr 190px;
@@ -46,8 +61,84 @@
       "main"
       "timeline";
   }
+/* ═══════════════════════════════════════════════════
+   Scene Volume Control
+   ═══════════════════════════════════════════════════ */
+
+.volume-control {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.volume-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.volume-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ivory);
+}
+
+.volume-value {
+  min-width: 44px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--gold-2);
+  font-weight: 600;
+}
+
+.volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.volume-slider {
+  flex: 1;
+  width: 100%;
+  cursor: pointer;
+  accent-color: var(--gold);
+}
+
+.volume-mute-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 32px;
+
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ivory);
+
+  cursor: pointer;
+  font-size: 15px;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.volume-mute-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: var(--border-hard);
+}
+
+.volume-mute-btn:active {
+  transform: scale(0.95);
+}
 
   /* ══════════ HEADER ══════════ */
+
   header {
     grid-area: header;
     display: flex;
@@ -59,44 +150,68 @@
     box-shadow: 0 4px 24px rgba(0,0,0,0.4);
     position: relative;
   }
+
   header::before {
     content: '';
     position: absolute;
-    bottom: 0; left: 0; right: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     height: 1px;
-    background: linear-gradient(90deg,
-      transparent, var(--gold) 50%, transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--gold) 50%,
+      transparent
+    );
     opacity: 0.5;
   }
+
   .brand {
     display: flex;
     align-items: center;
     gap: 22px;
   }
+
   .brand .logo-mark {
-    width: 46px; height: 46px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%,
-      #d4a827 0%, #a17a1a 55%, #5a3e2b 100%);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 0 2px var(--gold), 0 0 24px rgba(201,162,39,0.35);
+    background: radial-gradient(
+      circle at 35% 35%,
+      #d4a827 0%,
+      #a17a1a 55%,
+      #5a3e2b 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 0 0 2px var(--gold),
+      0 0 24px rgba(201,162,39,0.35);
     position: relative;
   }
+
   .brand .logo-mark::after {
     content: '';
-    position: absolute; inset: 5px;
+    position: absolute;
+    inset: 5px;
     border: 1px solid rgba(11, 61, 46, 0.9);
     border-radius: 50%;
   }
+
   .brand h1 {
     font-family: 'Aref Ruqaa', serif;
-    font-size: 32px; font-weight: 700;
+    font-size: 32px;
+    font-weight: 700;
     letter-spacing: 0.01em;
     color: var(--gold);
-    text-shadow: 0 2px 12px rgba(201,162,39,0.4),
-                 0 0 1px rgba(0,0,0,0.9);
+    text-shadow:
+      0 2px 12px rgba(201,162,39,0.4),
+      0 0 1px rgba(0,0,0,0.9);
     line-height: 1;
   }
+
   .brand .sub {
     font-family: 'Reem Kufi', sans-serif;
     font-size: 11px;
@@ -105,24 +220,41 @@
     letter-spacing: 0.32em;
     margin-top: 4px;
   }
-  .brand-text { display: flex; flex-direction: column; }
 
-  .header-actions { display: flex; align-items: center; gap: 22px; }
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+
   .countdown {
     font-family: 'Cairo', sans-serif;
     font-size: 13px;
     color: var(--beige);
     opacity: 0.7;
     font-variant-numeric: tabular-nums;
-    display: flex; align-items: center; gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
+
   .countdown .num {
     color: var(--gold);
     font-weight: 700;
     font-size: 15px;
   }
+
   .proceed-btn {
-    background: linear-gradient(135deg, var(--gold-2) 0%, var(--copper) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--gold-2) 0%,
+      var(--copper) 100%
+    );
     color: #1a1206;
     border: none;
     padding: 12px 30px;
@@ -132,22 +264,29 @@
     letter-spacing: 0.02em;
     border-radius: 999px;
     cursor: pointer;
-    display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 4px 20px rgba(201,162,39,0.35),
-                inset 0 1px 0 rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow:
+      0 4px 20px rgba(201,162,39,0.35),
+      inset 0 1px 0 rgba(255,255,255,0.2);
     transition: all 0.2s;
   }
+
   .proceed-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 32px rgba(201,162,39,0.55),
-                inset 0 1px 0 rgba(255,255,255,0.3);
+    box-shadow:
+      0 8px 32px rgba(201,162,39,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.3);
   }
+
   .proceed-btn .arrow {
     font-size: 18px;
     transform: scaleX(-1);
   }
 
   /* ══════════ MAIN GRID ══════════ */
+
   main {
     grid-area: main;
     display: grid;
@@ -159,28 +298,40 @@
   }
 
   /* ─── Big preview ─── */
+
   .stage {
     background: #04120d;
     border: 1px solid var(--border-soft);
     border-radius: 4px;
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     box-shadow: var(--shadow);
     position: relative;
   }
+
   .stage-inner {
     flex: 1;
-    display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at center, #06231a 0%, #04120d 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(
+      ellipse at center,
+      #06231a 0%,
+      #04120d 100%
+    );
     overflow: hidden;
     position: relative;
   }
+
   .stage-inner img,
   .stage-inner video {
-    max-width: 100%; max-height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
     display: block;
   }
+
   .stage-empty {
     color: var(--beige);
     opacity: 0.5;
@@ -191,7 +342,8 @@
     line-height: 2;
   }
 
-  /* ─── Draggable stage (cover mode only) ─── */
+  /* ─── Draggable stage ─── */
+
   .stage-inner.draggable img,
   .stage-inner.draggable video {
     cursor: grab;
@@ -199,12 +351,12 @@
     -webkit-user-drag: none;
     touch-action: none;
   }
+
   .stage-inner.dragging img,
   .stage-inner.dragging video {
     cursor: grabbing;
   }
 
-  /* Hint chip shown briefly when entering cover mode */
   .drag-hint {
     position: absolute;
     bottom: 14px;
@@ -223,9 +375,11 @@
     transition: opacity 0.25s;
     z-index: 5;
   }
-  .drag-hint.show { opacity: 1; }
 
-  /* Reset-position button — appears only when offset ≠ centered */
+  .drag-hint.show {
+    opacity: 1;
+  }
+
   .reset-pos {
     position: absolute;
     top: 12px;
@@ -243,31 +397,45 @@
     align-items: center;
     gap: 5px;
   }
-  .reset-pos.show { display: flex; }
+
+  .reset-pos.show {
+    display: flex;
+  }
+
   .reset-pos:hover {
     background: rgba(201,162,39,0.15);
     border-color: var(--gold);
   }
 
-  /* video controls bar */
+  /* ─── Stage controls ─── */
+
   .stage-controls {
     height: 54px;
     background: linear-gradient(180deg, #061a13, #04120d);
     border-top: 1px solid var(--border-soft);
-    display: flex; align-items: center;
+    display: flex;
+    align-items: center;
     padding: 0 22px;
     gap: 16px;
   }
+
   .ctrl-icon {
-    width: 32px; height: 32px;
-    display: flex; align-items: center; justify-content: center;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--gold);
     cursor: pointer;
     border-radius: 50%;
     transition: background 0.15s;
     font-size: 16px;
   }
-  .ctrl-icon:hover { background: rgba(201,162,39,0.12); }
+
+  .ctrl-icon:hover {
+    background: rgba(201,162,39,0.12);
+  }
+
   .progress-bar {
     flex: 1;
     height: 4px;
@@ -276,24 +444,35 @@
     position: relative;
     cursor: pointer;
   }
+
   .progress-fill {
     position: absolute;
-    left: 0; top: 0; bottom: 0;
-    background: linear-gradient(90deg, var(--gold-2), var(--gold));
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      var(--gold-2),
+      var(--gold)
+    );
     border-radius: 2px;
-    width: 25%;
+    width: 0%;
     box-shadow: 0 0 8px rgba(201,162,39,0.6);
   }
+
   .progress-knob {
-    position: absolute; top: 50%;
+    position: absolute;
+    top: 50%;
     transform: translate(-50%, -50%);
-    width: 12px; height: 12px;
+    width: 12px;
+    height: 12px;
     background: var(--gold);
     border: 2px solid #04120d;
     border-radius: 50%;
-    left: 25%;
+    left: 0%;
     box-shadow: 0 0 10px rgba(201,162,39,0.7);
   }
+
   .time-code {
     font-family: 'Cairo', sans-serif;
     font-size: 12px;
@@ -304,43 +483,64 @@
     text-align: center;
   }
 
-  /* ─── Middle: candidate options ─── */
+  /* ─── Middle: candidates ─── */
+
   .candidates {
-    background: linear-gradient(180deg, #082218 0%, #061a13 100%);
+    background: linear-gradient(
+      180deg,
+      #082218 0%,
+      #061a13 100%
+    );
     border: 1px solid var(--border-soft);
     border-radius: 4px;
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     box-shadow: var(--shadow);
   }
+
   .section-head {
     padding: 14px 16px 12px;
-    display: flex; align-items: center; gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     border-bottom: 1px solid var(--border-soft);
     color: var(--gold);
     font-family: 'Reem Kufi', sans-serif;
     font-size: 15px;
     font-weight: 500;
   }
+
   .section-head .icon {
-    width: 22px; height: 22px;
+    width: 22px;
+    height: 22px;
     border: 1px solid var(--border-hard);
     border-radius: 3px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 11px;
     color: var(--gold);
   }
+
   .cand-list {
     flex: 1;
     overflow-y: auto;
     padding: 12px;
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
   }
-  .cand-list::-webkit-scrollbar { width: 6px; }
-  .cand-list::-webkit-scrollbar-thumb {
-    background: var(--border-hard); border-radius: 3px;
+
+  .cand-list::-webkit-scrollbar {
+    width: 6px;
   }
+
+  .cand-list::-webkit-scrollbar-thumb {
+    background: var(--border-hard);
+    border-radius: 3px;
+  }
+
   .cand {
     position: relative;
     aspect-ratio: 16 / 9;
@@ -351,37 +551,86 @@
     cursor: pointer;
     transition: all 0.18s;
   }
+
   .cand img {
-    width: 100%; height: 100%;
-    object-fit: cover; display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
+
   .cand:hover {
     border-color: var(--border-hard);
     transform: translateY(-1px);
   }
+
   .cand.active {
     border-color: var(--gold);
-    box-shadow: 0 0 0 1px var(--gold),
-                0 0 20px rgba(201,162,39,0.5);
+    box-shadow:
+      0 0 0 1px var(--gold),
+      0 0 20px rgba(201,162,39,0.5);
   }
+
   .cand.active::after {
     content: '✓';
-    position: absolute; top: 6px; right: 6px;
-    width: 22px; height: 22px;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
     background: var(--gold);
     color: #1a1206;
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: bold;
     font-size: 13px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    z-index: 3;
   }
+
+  .cand .media-badge {
+    position: absolute;
+    bottom: 7px;
+    left: 7px;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4,18,13,0.9);
+    border: 1px solid var(--border-hard);
+    color: var(--gold);
+    font-size: 11px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .cand .media-label {
+    position: absolute;
+    bottom: 7px;
+    right: 7px;
+    background: rgba(4,18,13,0.9);
+    color: var(--gold);
+    border: 1px solid var(--border-soft);
+    padding: 3px 7px;
+    border-radius: 3px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 9px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
   .cand-add {
     aspect-ratio: 16 / 9;
     background: rgba(201,162,39,0.05);
     border: 2px dashed var(--border-hard);
     border-radius: 3px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     color: var(--gold);
     font-family: 'Reem Kufi', sans-serif;
@@ -389,32 +638,65 @@
     flex-direction: column;
     gap: 8px;
     transition: all 0.18s;
+    text-align: center;
   }
+
   .cand-add:hover {
     background: rgba(201,162,39,0.12);
     border-style: solid;
   }
-  .cand-add .plus { font-size: 26px; line-height: 1; }
 
-  /* ─── Right sidebar: scene details ─── */
+  .cand-add .plus {
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .cand-add.graphic {
+    border-color: rgba(201,162,39,0.65);
+    background:
+      radial-gradient(
+        circle at center,
+        rgba(201,162,39,0.12),
+        rgba(201,162,39,0.03)
+      );
+  }
+
+  .cand-add.graphic .plus {
+    font-size: 23px;
+  }
+
+  /* ─── Right sidebar ─── */
+
   .details {
-    background: linear-gradient(180deg, #082218 0%, #061a13 100%);
+    background: linear-gradient(
+      180deg,
+      #082218 0%,
+      #061a13 100%
+    );
     border: 1px solid var(--border-soft);
     border-radius: 4px;
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     box-shadow: var(--shadow);
   }
+
   .details-body {
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     gap: 18px;
   }
-  .details-body::-webkit-scrollbar { width: 6px; }
+
+  .details-body::-webkit-scrollbar {
+    width: 6px;
+  }
+
   .details-body::-webkit-scrollbar-thumb {
-    background: var(--border-hard); border-radius: 3px;
+    background: var(--border-hard);
+    border-radius: 3px;
   }
 
   .transcription {
@@ -423,6 +705,7 @@
     border-radius: 3px;
     padding: 14px 16px;
   }
+
   .transcription-label {
     font-family: 'Reem Kufi', sans-serif;
     font-size: 11px;
@@ -431,6 +714,7 @@
     margin-bottom: 8px;
     letter-spacing: 0.04em;
   }
+
   .transcription-text {
     font-family: 'Noto Naskh Arabic', serif;
     font-size: 15px;
@@ -447,17 +731,20 @@
     opacity: 0.75;
     letter-spacing: 0.04em;
   }
+
   .keywords-grid {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
   }
+
   .kw-row {
     display: flex;
     flex-direction: column;
     gap: 6px;
   }
+
   .kw-col-title {
     font-family: 'Reem Kufi', sans-serif;
     font-size: 11px;
@@ -468,12 +755,14 @@
     align-items: center;
     gap: 6px;
   }
+
   .kw-col-title::after {
     content: '';
     flex: 1;
     height: 1px;
     background: var(--border-soft);
   }
+
   .kw-full {
     font-family: 'Cairo', sans-serif;
     font-size: 12px;
@@ -491,21 +780,25 @@
     line-height: 1.5;
     word-break: break-word;
   }
+
   .kw-full:hover {
     background: rgba(201,162,39,0.10);
     border-color: var(--gold);
     transform: translateX(-2px);
   }
+
   .kw-full .kw-text {
     flex: 1;
     direction: rtl;
     text-align: right;
   }
+
   .kw-full .kw-text.en {
     direction: ltr;
     text-align: left;
     font-family: 'Cairo', sans-serif;
   }
+
   .kw-full .copy-icon {
     color: var(--gold);
     font-size: 13px;
@@ -513,12 +806,19 @@
     flex-shrink: 0;
     transition: opacity 0.15s;
   }
-  .kw-full:hover .copy-icon { opacity: 1; }
+
+  .kw-full:hover .copy-icon {
+    opacity: 1;
+  }
+
   .kw-full.copied {
     background: rgba(78, 201, 160, 0.12);
     border-color: rgba(78, 201, 160, 0.5);
   }
-  .kw-full.copied .copy-icon { color: #7ad9b5; }
+
+  .kw-full.copied .copy-icon {
+    color: #7ad9b5;
+  }
 
   .fit-toggle {
     font-family: 'Reem Kufi', sans-serif;
@@ -536,27 +836,36 @@
     transition: all 0.15s;
     white-space: nowrap;
   }
+
   .fit-toggle:hover {
     border-color: var(--gold);
     color: var(--gold);
   }
+
   .fit-toggle.active {
     background: rgba(201,162,39,0.12);
     border-color: var(--gold);
     color: var(--gold);
   }
+
   .fit-toggle .dot {
-    width: 7px; height: 7px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: currentColor;
     opacity: 0.4;
   }
-  .fit-toggle.active .dot { opacity: 1; }
+
+  .fit-toggle.active .dot {
+    opacity: 1;
+  }
 
   .kw-list {
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     gap: 6px;
   }
+
   .kw {
     font-family: 'Cairo', sans-serif;
     font-size: 11px;
@@ -571,10 +880,12 @@
     gap: 6px;
     transition: all 0.15s;
   }
+
   .kw:hover {
     background: rgba(201,162,39,0.08);
     border-color: var(--border-hard);
   }
+
   .kw .magnifier {
     color: var(--gold);
     font-size: 11px;
@@ -582,11 +893,139 @@
     flex-shrink: 0;
   }
 
+  /* ─── Graphic panel ─── */
+
+  .graphic-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(201, 162, 39, 0.06);
+    border: 1px solid var(--border-hard);
+    border-radius: 4px;
+  }
+
+  .graphic-panel textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 10px 12px;
+    background: rgba(4, 18, 13, 0.65);
+    border: 1px solid var(--border-soft);
+    color: var(--ivory);
+    font-family: ui-monospace, 'Cairo', monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    border-radius: 3px;
+    direction: ltr;
+    text-align: left;
+    resize: vertical;
+  }
+
+  .graphic-panel textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(201,162,39,0.15);
+  }
+
+  .graphic-panel .kw-col-title {
+    margin-bottom: 2px;
+  }
+
+  /* ─── Generic form controls ─── */
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field-label {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 11px;
+    color: var(--beige);
+    opacity: 0.8;
+  }
+
+  .field-help {
+    font-size: 9px;
+    color: var(--beige);
+    opacity: 0.4;
+    line-height: 1.5;
+  }
+
+  .graphic-field,
+  .graphic-select,
+  .graphic-input,
+  .graphic-number,
+  .graphic-textarea {
+    width: 100%;
+    padding: 10px 11px;
+    background: rgba(4, 18, 13, 0.72);
+    border: 1px solid var(--border-soft);
+    color: var(--ivory);
+    border-radius: 3px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
+  }
+
+  .graphic-field:focus,
+  .graphic-select:focus,
+  .graphic-input:focus,
+  .graphic-number:focus,
+  .graphic-textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(201,162,39,0.12);
+  }
+
+  .graphic-textarea {
+    min-height: 95px;
+    resize: vertical;
+    direction: ltr;
+    text-align: left;
+    font-family: ui-monospace, 'Cairo', monospace;
+    line-height: 1.5;
+  }
+
+  .graphic-select {
+    cursor: pointer;
+  }
+
+  .graphic-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 0;
+  }
+
+  .graphic-checkbox {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+
+  .graphic-checkbox-row label {
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--beige);
+  }
+
+  .duration-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* ─── Custom URL ─── */
+
   .custom-url-block {
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
     margin-top: 6px;
   }
+
   .custom-url-block input {
     width: 100%;
     padding: 11px 14px;
@@ -599,20 +1038,24 @@
     direction: ltr;
     text-align: left;
   }
+
   .custom-url-block input::placeholder {
     color: var(--beige);
     opacity: 0.35;
   }
+
   .custom-url-block input:focus {
     outline: none;
     border-color: var(--gold);
     box-shadow: 0 0 0 2px rgba(201,162,39,0.15);
   }
+
   .btn-row {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 8px;
   }
+
   .btn {
     padding: 10px 14px;
     background: rgba(4, 18, 13, 0.6);
@@ -624,21 +1067,36 @@
     cursor: pointer;
     transition: all 0.15s;
   }
+
   .btn:hover {
     background: rgba(201,162,39,0.1);
     border-color: var(--gold);
     color: var(--gold);
   }
+
   .btn.primary {
-    background: linear-gradient(135deg, var(--gold-2) 0%, var(--copper) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--gold-2) 0%,
+      var(--copper) 100%
+    );
     color: #1a1206;
     border-color: transparent;
     font-weight: 600;
   }
+
   .btn.primary:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(201,162,39,0.4);
   }
+
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
   .msg {
     font-size: 11px;
     padding: 8px 10px;
@@ -646,12 +1104,17 @@
     font-family: 'Cairo', sans-serif;
     display: none;
   }
-  .msg.show { display: block; }
+
+  .msg.show {
+    display: block;
+  }
+
   .msg.ok {
     background: rgba(78, 201, 160, 0.1);
     color: #7ad9b5;
     border: 1px solid rgba(78, 201, 160, 0.3);
   }
+
   .msg.err {
     background: rgba(122, 31, 43, 0.25);
     color: #f0a0a8;
@@ -659,8 +1122,11 @@
   }
 
   .chips {
-    display: flex; flex-wrap: wrap; gap: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
+
   .chip {
     font-family: 'Reem Kufi', sans-serif;
     font-size: 10px;
@@ -671,11 +1137,13 @@
     border-radius: 3px;
     letter-spacing: 0.03em;
   }
+
   .chip.gold {
     color: var(--gold);
     border-color: rgba(201,162,39,0.35);
     background: rgba(201,162,39,0.08);
   }
+
   .chip.warn {
     color: #f0a0a8;
     border-color: rgba(122,31,43,0.5);
@@ -683,47 +1151,75 @@
   }
 
   /* ══════════ TIMELINE ══════════ */
+
   .timeline-wrap {
     grid-area: timeline;
-    background: linear-gradient(180deg, #061a13 0%, #04120d 100%);
+    background: linear-gradient(
+      180deg,
+      #061a13 0%,
+      #04120d 100%
+    );
     border-top: 1px solid var(--border-soft);
     padding: 14px 24px 20px;
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
     position: relative;
   }
+
   .timeline-wrap::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
+    top: 0;
+    left: 0;
+    right: 0;
     height: 1px;
-    background: linear-gradient(90deg,
-      transparent, var(--gold) 50%, transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--gold) 50%,
+      transparent
+    );
     opacity: 0.35;
   }
+
   .timeline-head {
-    display: flex; align-items: center; gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     color: var(--gold);
     font-family: 'Reem Kufi', sans-serif;
     font-size: 14px;
   }
+
   .timeline-head .icon {
-    width: 22px; height: 22px;
+    width: 22px;
+    height: 22px;
     border: 1px solid var(--border-hard);
     border-radius: 3px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 11px;
   }
+
   .timeline {
-    display: flex; gap: 12px;
+    display: flex;
+    gap: 12px;
     overflow-x: auto;
     padding-bottom: 8px;
     scroll-behavior: smooth;
   }
-  .timeline::-webkit-scrollbar { height: 6px; }
-  .timeline::-webkit-scrollbar-thumb {
-    background: var(--border-hard); border-radius: 3px;
+
+  .timeline::-webkit-scrollbar {
+    height: 6px;
   }
+
+  .timeline::-webkit-scrollbar-thumb {
+    background: var(--border-hard);
+    border-radius: 3px;
+  }
+
   .thumb {
     position: relative;
     flex: 0 0 210px;
@@ -735,44 +1231,67 @@
     cursor: pointer;
     transition: all 0.2s;
   }
+
   .thumb:hover {
     border-color: var(--border-hard);
     transform: translateY(-2px);
   }
+
   .thumb.active {
     border-color: var(--gold);
-    box-shadow: 0 0 0 1px var(--gold),
-                0 0 24px rgba(201,162,39,0.45);
+    box-shadow:
+      0 0 0 1px var(--gold),
+      0 0 24px rgba(201,162,39,0.45);
   }
+
   .thumb img {
-    width: 100%; height: 100%;
-    object-fit: cover; display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
+
   .thumb .empty {
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    background: repeating-linear-gradient(45deg,
-      #06231a, #06231a 8px, #082a1f 8px, #082a1f 16px);
-    color: var(--beige); opacity: 0.5;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: repeating-linear-gradient(
+      45deg,
+      #06231a,
+      #06231a 8px,
+      #082a1f 8px,
+      #082a1f 16px
+    );
+    color: var(--beige);
+    opacity: 0.5;
     font-family: 'Cairo', sans-serif;
     font-size: 11px;
   }
+
   .thumb .overlay {
     position: absolute;
     inset: auto 0 0 0;
-    background: linear-gradient(180deg, transparent 0%, rgba(4,18,13,0.95) 100%);
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(4,18,13,0.95) 100%
+    );
     padding: 18px 10px 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
   }
+
   .thumb .num {
     font-family: 'Reem Kufi', sans-serif;
     font-size: 15px;
     color: var(--gold);
     font-weight: 600;
   }
+
   .thumb .title {
     font-family: 'Noto Naskh Arabic', serif;
     font-size: 12px;
@@ -784,6 +1303,7 @@
     white-space: nowrap;
     direction: rtl;
   }
+
   .thumb .duration {
     position: absolute;
     top: 8px;
@@ -796,7 +1316,26 @@
     padding: 3px 7px;
     border-radius: 2px;
     border: 1px solid var(--border-soft);
+    z-index: 3;
   }
+
+  .thumb .media-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4,18,13,0.9);
+    border: 1px solid var(--border-soft);
+    color: var(--gold);
+    font-size: 10px;
+    z-index: 4;
+  }
+
   .thumb.important::before {
     content: '★';
     position: absolute;
@@ -807,47 +1346,64 @@
     text-shadow: 0 0 8px rgba(0,0,0,0.9);
     z-index: 2;
   }
+
   .thumb.no-asset {
     border-color: rgba(122,31,43,0.4);
   }
 
   /* ══════════ TOAST ══════════ */
+
   .toast {
     position: fixed;
     bottom: 210px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(180deg, #0d3326, #082218);
+    background: linear-gradient(
+      180deg,
+      #0d3326,
+      #082218
+    );
     border: 1px solid var(--gold);
     color: var(--ivory);
     padding: 14px 24px;
     font-family: 'Cairo', sans-serif;
     font-size: 13px;
     border-radius: 4px;
-    box-shadow: 0 12px 48px rgba(0,0,0,0.7),
-                0 0 24px rgba(201,162,39,0.3);
+    box-shadow:
+      0 12px 48px rgba(0,0,0,0.7),
+      0 0 24px rgba(201,162,39,0.3);
     opacity: 0;
-    transition: opacity 0.3s, transform 0.3s;
+    transition:
+      opacity 0.3s,
+      transform 0.3s;
     pointer-events: none;
-    z-index: 50;
+    z-index: 200;
   }
+
   .toast.show {
     opacity: 1;
     transform: translateX(-50%) translateY(-6px);
   }
 
   /* ══════════ OVERLAY ══════════ */
+
   .overlay {
-    position: fixed; inset: 0;
+    position: fixed;
+    inset: 0;
     background: rgba(4, 18, 13, 0.94);
     backdrop-filter: blur(12px);
     display: none;
-    align-items: center; justify-content: center;
+    align-items: center;
+    justify-content: center;
     flex-direction: column;
     gap: 24px;
     z-index: 100;
   }
-  .overlay.show { display: flex; }
+
+  .overlay.show {
+    display: flex;
+  }
+
   .overlay h2 {
     font-family: 'Aref Ruqaa', serif;
     font-size: 48px;
@@ -855,6 +1411,7 @@
     letter-spacing: 0.02em;
     text-shadow: 0 0 40px rgba(201,162,39,0.5);
   }
+
   .overlay p {
     color: var(--beige);
     opacity: 0.75;
@@ -862,39 +1419,68 @@
     font-size: 17px;
     direction: rtl;
   }
+
   .overlay .spinner {
-    width: 44px; height: 44px;
+    width: 44px;
+    height: 44px;
     border: 3px solid rgba(201,162,39,0.15);
     border-top-color: var(--gold);
     border-radius: 50%;
     animation: spin 0.9s linear infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ══════════ MODAL (custom URL) ══════════ */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ══════════ MODALS ══════════ */
+
   .modal {
-    position: fixed; inset: 0;
+    position: fixed;
+    inset: 0;
     background: rgba(4, 18, 13, 0.85);
     backdrop-filter: blur(8px);
     display: none;
-    align-items: center; justify-content: center;
-    z-index: 80;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+    padding: 20px;
   }
-  .modal.show { display: flex; }
+
+  .modal.show {
+    display: flex;
+  }
+
   .modal-card {
-    background: linear-gradient(180deg, #0a2a20, #061a13);
+    background: linear-gradient(
+      180deg,
+      #0a2a20,
+      #061a13
+    );
     border: 1px solid var(--border-hard);
     border-radius: 6px;
     padding: 28px;
     width: min(560px, 90vw);
-    box-shadow: var(--shadow), 0 0 60px rgba(201,162,39,0.15);
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow:
+      var(--shadow),
+      0 0 60px rgba(201,162,39,0.15);
   }
+
+  .modal-card.large {
+    width: min(720px, 94vw);
+  }
+
   .modal-card h3 {
     font-family: 'Reem Kufi', sans-serif;
     font-size: 20px;
     color: var(--gold);
     margin-bottom: 8px;
   }
+
   .modal-card p {
     font-family: 'Cairo', sans-serif;
     font-size: 12px;
@@ -903,6 +1489,7 @@
     margin-bottom: 18px;
     line-height: 1.7;
   }
+
   .modal-card input {
     width: 100%;
     padding: 14px 16px;
@@ -916,34 +1503,182 @@
     text-align: left;
     margin-bottom: 16px;
   }
+
   .modal-card input:focus {
     outline: none;
     border-color: var(--gold);
     box-shadow: 0 0 0 3px rgba(201,162,39,0.15);
   }
+
   .modal-actions {
     display: flex;
     justify-content: flex-start;
     gap: 10px;
   }
+
+  /* ─── Graphic creator ─── */
+
+  #graphicTemplateSelect {
+    margin-bottom: 14px;
+  }
+
+  .graphic-form {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .graphic-form-scroll {
+    max-height: 48vh;
+    overflow-y: auto;
+    padding-left: 3px;
+    padding-right: 2px;
+    margin-bottom: 15px;
+  }
+
+  .graphic-form-scroll::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .graphic-form-scroll::-webkit-scrollbar-thumb {
+    background: var(--border-hard);
+    border-radius: 3px;
+  }
+
+  .template-meta {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 13px;
+    flex-wrap: wrap;
+  }
+
+  .template-meta .chip {
+    font-size: 9px;
+  }
+
+  .graphic-render-progress {
+    display: none;
+    margin-top: 15px;
+    padding: 13px;
+    background: rgba(201,162,39,0.06);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+  }
+
+  .graphic-render-progress.show {
+    display: block;
+  }
+
+  .render-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--beige);
+    font-family: 'Cairo', sans-serif;
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+
+  .mini-spinner {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    border: 2px solid rgba(201,162,39,0.15);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .render-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(242,232,213,0.08);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .render-track-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(
+      90deg,
+      var(--copper),
+      var(--gold-2)
+    );
+    border-radius: inherit;
+    transition: width 0.25s ease;
+  }
+
+  .render-percent {
+    margin-top: 6px;
+    text-align: left;
+    direction: ltr;
+    color: var(--gold);
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .form-empty {
+    padding: 25px;
+    text-align: center;
+    color: var(--beige);
+    opacity: 0.5;
+    font-size: 12px;
+  }
+
+  .template-select-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .template-select-wrap label {
+    font-family: 'Reem Kufi', sans-serif;
+    font-size: 11px;
+    color: var(--beige);
+    opacity: 0.8;
+  }
+
+  /* responsive */
+  @media (max-width: 1150px) {
+    main {
+      grid-template-columns: 1fr 230px 300px;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .brand h1 {
+      font-size: 27px;
+    }
+
+    header {
+      padding: 0 20px;
+    }
+  }
 </style>
 </head>
+
 <body>
 
 <!-- ══════════ HEADER ══════════ -->
+
 <header>
   <div class="brand">
     <div class="logo-mark"></div>
+
     <div class="brand-text">
       <h1>محرر المشاهد</h1>
       <div class="sub">SCENE REVIEW</div>
     </div>
   </div>
+
   <div class="header-actions">
     <div class="countdown">
       <span>يبدأ تلقائياً بعد</span>
       <span class="num" id="countdown">20:00</span>
     </div>
+
     <button class="proceed-btn" id="proceedBtn">
       <span>متابعة</span>
       <span class="arrow">←</span>
@@ -952,117 +1687,348 @@
 </header>
 
 <!-- ══════════ MAIN ══════════ -->
+
 <main>
 
+  <!-- Stage -->
+
   <section class="stage">
+
     <div class="stage-inner" id="stageInner">
-      <div class="stage-empty">جارٍ التحميل…</div>
+      <div class="stage-empty">
+        جارٍ التحميل…
+      </div>
     </div>
+
     <div class="stage-controls">
-      <div class="ctrl-icon" id="playBtn">▶</div>
-      <div class="time-code" id="timecode">00:00 / 00:00</div>
-      <div class="progress-bar">
+
+      <div class="ctrl-icon" id="playBtn">
+        ▶
+      </div>
+
+      <div class="time-code" id="timecode">
+        00:00 / 00:00
+      </div>
+
+      <div class="progress-bar" id="progressBar">
         <div class="progress-fill"></div>
         <div class="progress-knob"></div>
       </div>
-      <button class="fit-toggle" id="fitToggle" title="طريقة العرض في المعاينة فقط">
+
+      <button
+        class="fit-toggle"
+        id="fitToggle"
+        title="طريقة العرض في المعاينة فقط"
+      >
         <span class="dot"></span>
         <span id="fitLabel">ملء الإطار</span>
       </button>
-      <div class="ctrl-icon" title="ملء الشاشة">⛶</div>
+
+      <div
+        class="ctrl-icon"
+        id="fullscreenBtn"
+        title="ملء الشاشة"
+      >
+        ⛶
+      </div>
+
     </div>
+
   </section>
 
+  <!-- Candidates -->
+
   <section class="candidates">
+
     <div class="section-head">
       <span class="icon">▦</span>
       <span>خيارات المشهد</span>
     </div>
+
     <div class="cand-list" id="candList"></div>
+
   </section>
 
+  <!-- Details -->
+
   <section class="details">
+
     <div class="section-head">
       <span class="icon">☰</span>
       <span>تفاصيل المشهد</span>
     </div>
+
     <div class="details-body" id="detailsBody"></div>
+
   </section>
 
 </main>
 
 <!-- ══════════ TIMELINE ══════════ -->
+
 <div class="timeline-wrap">
+
   <div class="timeline-head">
     <span class="icon">▤</span>
     <span>المشاهد</span>
   </div>
+
   <div class="timeline" id="timeline"></div>
+
 </div>
 
-<!-- ══════════ MODAL ══════════ -->
+<!-- ══════════ CUSTOM URL MODAL ══════════ -->
+
 <div class="modal" id="modal">
+
   <div class="modal-card">
+
     <h3>إضافة مصدر مخصص</h3>
-    <p>الصق رابط URL أو مساراً محلياً لصورة أو فيديو. سيتم تنزيله تلقائياً إذا كان رابطاً بعيداً.</p>
-    <input type="text" id="modalInput" placeholder="https://example.com/image.jpg  أو  /path/to/file.mp4" />
+
+    <p>
+      الصق رابط URL أو مساراً محلياً لصورة أو فيديو.
+      سيتم تنزيله تلقائياً إذا كان رابطاً بعيداً.
+    </p>
+
+    <input
+      type="text"
+      id="modalInput"
+      placeholder="https://example.com/image.jpg  أو  /path/to/file.mp4"
+    />
+
     <div class="modal-actions">
-      <button class="btn primary" id="modalConfirm">تأكيد</button>
-      <button class="btn" id="modalCancel">إلغاء</button>
+
+      <button class="btn primary" id="modalConfirm">
+        تأكيد
+      </button>
+
+      <button class="btn" id="modalCancel">
+        إلغاء
+      </button>
+
     </div>
+
   </div>
+
+</div>
+
+<!-- ══════════ GRAPHIC CREATOR MODAL ══════════ -->
+
+<div class="modal" id="graphicModal">
+
+  <div class="modal-card large">
+
+    <h3>إنشاء مشهد رسومي</h3>
+
+    <p>
+      اختر قالباً من قوالب Remotion، ثم عدّل خصائصه.
+      سيتم إخراج الفيديو في الخلفية وإضافته إلى خيارات هذا المشهد
+      دون اختياره تلقائياً.
+    </p>
+
+    <div class="template-select-wrap">
+
+      <label for="graphicTemplateSelect">
+        القالب
+      </label>
+
+      <select
+        class="graphic-select"
+        id="graphicTemplateSelect"
+      >
+        <option value="">
+          جارٍ تحميل القوالب…
+        </option>
+      </select>
+
+    </div>
+
+    <div
+      class="template-meta"
+      id="graphicTemplateMeta"
+    ></div>
+
+    <div
+      class="graphic-form-scroll"
+      id="graphicFormScroll"
+    >
+      <div class="form-empty">
+        اختر قالباً للبدء.
+      </div>
+    </div>
+
+    <div class="graphic-render-progress" id="graphicRenderProgress">
+
+      <div class="render-status">
+
+        <div class="mini-spinner"></div>
+
+        <span id="graphicRenderStatus">
+          جارٍ تجهيز المشهد…
+        </span>
+
+      </div>
+
+      <div class="render-track">
+        <div
+          class="render-track-fill"
+          id="graphicRenderProgressFill"
+        ></div>
+      </div>
+
+      <div
+        class="render-percent"
+        id="graphicRenderPercent"
+      >
+        —
+      </div>
+
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        class="btn primary"
+        id="createGraphicConfirm"
+      >
+        إنشاء وإخراج
+      </button>
+
+      <button
+        class="btn"
+        id="createGraphicCancel"
+      >
+        إلغاء
+      </button>
+
+    </div>
+
+  </div>
+
 </div>
 
 <!-- ══════════ OVERLAY ══════════ -->
+
 <div class="overlay" id="overlay">
+
   <div class="spinner"></div>
-  <h2 id="overlayTitle">جارٍ المتابعة…</h2>
-  <p id="overlayMsg">يتم الآن بناء المقاطع وإخراج الفيديو النهائي.</p>
+
+  <h2 id="overlayTitle">
+    جارٍ المتابعة…
+  </h2>
+
+  <p id="overlayMsg">
+    يتم الآن بناء المقاطع وإخراج الفيديو النهائي.
+  </p>
+
 </div>
 
 <!-- ══════════ TOAST ══════════ -->
+
 <div class="toast" id="toast"></div>
 
 <script>
+
 // ═══════════════════════════════════════════════════
 // State
 // ═══════════════════════════════════════════════════
-let state = { scenes: [], context: {}, timeout_seconds: 1200 };
+
+let state = {
+  scenes: [],
+  context: {},
+  timeout_seconds: 1200,
+};
+
 let currentIdx = 0;
 let timeoutAt = null;
 
+let graphicTemplates = [];
+let graphicJobPollTimer = null;
+let graphicCreating = false;
+
 const $ = (id) => document.getElementById(id);
+
 const fmt = (s) => {
-  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
-  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  const value = Number(s) || 0;
+  const m = Math.floor(value / 60);
+  const sec = Math.floor(value % 60);
+
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 };
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g,
-  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const esc = (s) =>
+  String(s ?? '').replace(
+    /[&<>"']/g,
+    c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[c])
+  );
+
+const isVideoAsset = (src) =>
+  /\.(mp4|webm|mov|m4v)$/i.test(src || '');
+
+const filenameOf = (pathOrUrl) => {
+  try {
+    return decodeURIComponent(
+      String(pathOrUrl || '').split('/').pop() || ''
+    );
+  } catch (_) {
+    return String(pathOrUrl || '').split('/').pop() || '';
+  }
+};
+
+const assetThumbUrl = (sceneId, pathOrUrl) => {
+  const filename = filenameOf(pathOrUrl);
+
+  if (isVideoAsset(filename)) {
+    return `/thumb/${encodeURIComponent(sceneId)}/${encodeURIComponent(filename)}`;
+  }
+
+  return `/asset/${encodeURIComponent(sceneId)}/${encodeURIComponent(filename)}`;
+};
 
 function toast(msg, kind = '') {
   const t = $('toast');
+
   t.textContent = msg;
   t.className = 'toast show ' + kind;
+
   clearTimeout(t._to);
-  t._to = setTimeout(() => t.className = 'toast ' + kind, 2800);
+
+  t._to = setTimeout(() => {
+    t.className = 'toast ' + kind;
+  }, 2800);
 }
+
 async function copyToClipboard(text) {
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
       return true;
     }
-  } catch (e) { /* fall through */ }
+  } catch (e) {
+    // fall through
+  }
 
   try {
     const ta = document.createElement('textarea');
+
     ta.value = text;
     ta.style.position = 'fixed';
     ta.style.opacity = '0';
+
     document.body.appendChild(ta);
+
     ta.select();
+
     const ok = document.execCommand('copy');
+
     document.body.removeChild(ta);
+
     return ok;
   } catch (e) {
     return false;
@@ -1072,11 +2038,36 @@ async function copyToClipboard(text) {
 // ═══════════════════════════════════════════════════
 // Load / render
 // ═══════════════════════════════════════════════════
+
 async function loadState() {
-  const r = await fetch('/api/state');
-  state = await r.json();
-  timeoutAt = Date.now() + state.timeout_seconds * 1000;
-  renderAll();
+  try {
+    const r = await fetch('/api/state');
+
+    if (!r.ok) {
+      throw new Error(`State request failed: ${r.status}`);
+    }
+
+    state = await r.json();
+
+    timeoutAt =
+      Date.now() +
+      (Number(state.timeout_seconds) || 1200) * 1000;
+
+    renderAll();
+
+  } catch (err) {
+    console.error(err);
+
+    $('stageInner').innerHTML = `
+      <div class="stage-empty">
+        تعذّر تحميل بيانات المشاهد.
+        <br>
+        تحقق من تشغيل الخادم.
+      </div>
+    `;
+
+    toast('تعذّر تحميل المشاهد', 'err');
+  }
 }
 
 function renderAll() {
@@ -1086,514 +2077,3219 @@ function renderAll() {
   renderTimeline();
 }
 
+// ═══════════════════════════════════════════════════
+// Asset helpers
+// ═══════════════════════════════════════════════════
+
+function getStageMedia() {
+  return document.querySelector('#stageInner img, #stageInner video');
+}
+
+function getCurrentScene() {
+  return state.scenes[currentIdx] || null;
+}
+
+// ═══════════════════════════════════════════════════
+// Stage
+// ═══════════════════════════════════════════════════
+
 function renderStage() {
-  const s = state.scenes[currentIdx];
+  const s = getCurrentScene();
+
   if (!s) return;
+
   const inner = $('stageInner');
   const src = s.chosen_url;
-  const dur = s.end - s.start;
-  $('timecode').textContent = `00:00 / ${fmt(dur)}`;
 
-  // Reset any leftover interaction state from the previous scene
-  inner.classList.remove('draggable', 'dragging');
-  inner.querySelectorAll('.reset-pos, .drag-hint').forEach(el => el.remove());
+  const dur = Number(s.end || 0) - Number(s.start || 0);
+
+  $('timecode').textContent =
+    `00:00 / ${fmt(dur)}`;
+
+  inner.classList.remove(
+    'draggable',
+    'dragging'
+  );
+
+  inner.querySelectorAll(
+    '.reset-pos, .drag-hint'
+  ).forEach(el => el.remove());
 
   if (!src) {
-    inner.innerHTML = `<div class="stage-empty">لا توجد صورة لهذا المشهد.<br>اختر من الخيارات أو أضف رابطاً مخصصاً.</div>`;
+
+    inner.innerHTML = `
+      <div class="stage-empty">
+        لا توجد صورة لهذا المشهد.
+        <br>
+        اختر من الخيارات أو أضف رابطاً مخصصاً.
+      </div>
+    `;
+
     syncFitToggle();
+    updateProgressUI();
+
     return;
   }
 
-  const fit = s.fit_mode === 'cover' ? 'cover' : 'contain';
-  const ox = (s.fit_offset_x ?? 50);
-  const oy = (s.fit_offset_y ?? 50);
-  const posCss = `object-position: ${ox}% ${oy}%;`;
-  const fitCss = `object-fit: ${fit}; width: 100%; height: 100%; ${posCss}`;
-  const isVideo = /\.(mp4|webm|mov|m4v)$/i.test(src);
+  const fit =
+    s.fit_mode === 'cover'
+      ? 'cover'
+      : 'contain';
 
-  if (isVideo) {
-    inner.innerHTML = `<video src="${src}" controls autoplay muted loop playsinline style="${fitCss}"></video>`;
+  const ox = Number(s.fit_offset_x ?? 50);
+  const oy = Number(s.fit_offset_y ?? 50);
+
+  const posCss =
+    `object-position: ${ox}% ${oy}%;`;
+
+  const fitCss =
+    `object-fit: ${fit}; width: 100%; height: 100%; ${posCss}`;
+
+  const video =
+    isVideoAsset(src);
+
+  if (video) {
+
+    inner.innerHTML = `
+      <video
+        src="${esc(src)}"
+        controls
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        style="${fitCss}"
+      ></video>
+    `;
+
   } else {
-    inner.innerHTML = `<img src="${src}" alt="" style="${fitCss}">`;
+
+    inner.innerHTML = `
+      <img
+        src="${esc(src)}"
+        alt=""
+        draggable="false"
+        style="${fitCss}"
+      >
+    `;
   }
 
-  // Reset-position button (only in cover mode when not centered)
-  if (fit === 'cover' && (ox !== 50 || oy !== 50)) {
-    const rb = document.createElement('button');
-    rb.className = 'reset-pos show';
-    rb.innerHTML = '⟲ توسيط';
-    rb.onclick = (e) => { e.stopPropagation(); resetPosition(); };
+  if (
+    fit === 'cover' &&
+    (ox !== 50 || oy !== 50)
+  ) {
+
+    const rb =
+      document.createElement('button');
+
+    rb.className =
+      'reset-pos show';
+
+    rb.innerHTML =
+      '⟲ توسيط';
+
+    rb.onclick = (e) => {
+      e.stopPropagation();
+      resetPosition();
+    };
+
     inner.appendChild(rb);
   }
 
   syncFitToggle();
   attachDragHandlers();
+  attachStageMediaEvents();
+  updateProgressUI();
+}
+
+function attachStageMediaEvents() {
+  const media = getStageMedia();
+
+  if (!media) return;
+
+  if (media.tagName === 'VIDEO') {
+
+    media.addEventListener(
+      'timeupdate',
+      updateProgressUI
+    );
+
+    media.addEventListener(
+      'loadedmetadata',
+      updateProgressUI
+    );
+
+    media.addEventListener(
+      'play',
+      () => {
+        $('playBtn').textContent = '❚❚';
+      }
+    );
+
+    media.addEventListener(
+      'pause',
+      () => {
+        $('playBtn').textContent = '▶';
+      }
+    );
+  }
+}
+
+function updateProgressUI() {
+  const media = getStageMedia();
+
+  if (!media || media.tagName !== 'VIDEO') {
+
+    const fill =
+      document.querySelector('.progress-fill');
+
+    const knob =
+      document.querySelector('.progress-knob');
+
+    if (fill) fill.style.width = '0%';
+    if (knob) knob.style.left = '0%';
+
+    return;
+  }
+
+  const duration =
+    Number(media.duration) || 0;
+
+  const current =
+    Number(media.currentTime) || 0;
+
+  const pct =
+    duration > 0
+      ? Math.max(
+          0,
+          Math.min(100, (current / duration) * 100)
+        )
+      : 0;
+
+  const fill =
+    document.querySelector('.progress-fill');
+
+  const knob =
+    document.querySelector('.progress-knob');
+
+  if (fill) {
+    fill.style.width = `${pct}%`;
+  }
+
+  if (knob) {
+    knob.style.left = `${pct}%`;
+  }
+
+  const scene = getCurrentScene();
+
+  if (scene) {
+    $('timecode').textContent =
+      `${fmt(current)} / ${fmt(
+        Number(scene.end || 0) -
+        Number(scene.start || 0)
+      )}`;
+  }
 }
 
 function syncFitToggle() {
-  const s = state.scenes[currentIdx];
+  const s = getCurrentScene();
+
   const btn = $('fitToggle');
   const label = $('fitLabel');
+
   if (!btn || !label || !s) return;
-  const isCover = s.fit_mode === 'cover';
-  btn.classList.toggle('active', isCover);
-  label.textContent = isCover ? 'ملء الإطار' : 'الحجم الأصلي';
+
+  const isCover =
+    s.fit_mode === 'cover';
+
+  btn.classList.toggle(
+    'active',
+    isCover
+  );
+
+  label.textContent =
+    isCover
+      ? 'ملء الإطار'
+      : 'الحجم الأصلي';
 }
 
-// ── Drag-to-reposition (cover mode only) ─────────────────
+// ═══════════════════════════════════════════════════
+// Drag-to-reposition
+// ═══════════════════════════════════════════════════
+
 function attachDragHandlers() {
   const inner = $('stageInner');
-  const el = inner.querySelector('img, video');
-  const s = state.scenes[currentIdx];
+  const el =
+    inner.querySelector('img, video');
+
+  const s = getCurrentScene();
+
   if (!el || !s) return;
 
-  // Only active in cover mode
   if (s.fit_mode !== 'cover') {
-    inner.classList.remove('draggable');
+
+    inner.classList.remove(
+      'draggable'
+    );
+
     return;
   }
+
   inner.classList.add('draggable');
 
-  const isVid = el.tagName === 'VIDEO';
-  if (isVid && (!el.videoWidth || !el.videoHeight)) {
-    el.addEventListener('loadedmetadata', attachDragHandlers, { once: true });
-    return;
-  }
-  if (!isVid && (!el.naturalWidth || !el.naturalHeight)) {
-    el.addEventListener('load', attachDragHandlers, { once: true });
+  const isVid =
+    el.tagName === 'VIDEO';
+
+  if (
+    isVid &&
+    (!el.videoWidth || !el.videoHeight)
+  ) {
+
+    el.addEventListener(
+      'loadedmetadata',
+      attachDragHandlers,
+      { once: true }
+    );
+
     return;
   }
 
-  // Prevent native image drag ghost
-  el.addEventListener('dragstart', e => e.preventDefault());
+  if (
+    !isVid &&
+    (!el.naturalWidth || !el.naturalHeight)
+  ) {
+
+    el.addEventListener(
+      'load',
+      attachDragHandlers,
+      { once: true }
+    );
+
+    return;
+  }
+
+  el.addEventListener(
+    'dragstart',
+    e => e.preventDefault()
+  );
+
   el.draggable = false;
 
-  // Cache overflow in pixels once — container size is stable
   const cw = inner.clientWidth;
   const ch = inner.clientHeight;
-  const iw = isVid ? el.videoWidth  : el.naturalWidth;
-  const ih = isVid ? el.videoHeight : el.naturalHeight;
-  const sc = Math.max(cw / iw, ch / ih);   // cover scale
-  const ovx = Math.max(0, iw * sc - cw);   // horizontal overflow (px)
-  const ovy = Math.max(0, ih * sc - ch);   // vertical overflow  (px)
+
+  const iw =
+    isVid
+      ? el.videoWidth
+      : el.naturalWidth;
+
+  const ih =
+    isVid
+      ? el.videoHeight
+      : el.naturalHeight;
+
+  const sc =
+    Math.max(
+      cw / iw,
+      ch / ih
+    );
+
+  const ovx =
+    Math.max(
+      0,
+      iw * sc - cw
+    );
+
+  const ovy =
+    Math.max(
+      0,
+      ih * sc - ch
+    );
 
   let dragging = false;
-  let startX = 0, startY = 0;
-  let startOX = s.fit_offset_x ?? 50;
-  let startOY = s.fit_offset_y ?? 50;
+
+  let startX = 0;
+  let startY = 0;
+
+  let startOX =
+    s.fit_offset_x ?? 50;
+
+  let startOY =
+    s.fit_offset_y ?? 50;
+
   let moved = false;
 
   const onDown = (e) => {
-    if (e.button !== undefined && e.button !== 0) return;
+
+    if (
+      e.button !== undefined &&
+      e.button !== 0
+    ) {
+      return;
+    }
+
     dragging = true;
     moved = false;
+
     startX = e.clientX;
     startY = e.clientY;
-    const parts = (el.style.objectPosition || '50% 50%').split(/\s+/);
-    startOX = parseFloat(parts[0]) || 50;
-    startOY = parseFloat(parts[1]) || 50;
-    inner.classList.add('dragging');
-    try { el.setPointerCapture?.(e.pointerId); } catch (_) {}
+
+    const parts =
+      (
+        el.style.objectPosition ||
+        '50% 50%'
+      ).split(/\s+/);
+
+    startOX =
+      parseFloat(parts[0]) || 50;
+
+    startOY =
+      parseFloat(parts[1]) || 50;
+
+    inner.classList.add(
+      'dragging'
+    );
+
+    try {
+      el.setPointerCapture?.(
+        e.pointerId
+      );
+    } catch (_) {}
+
     e.preventDefault();
   };
 
   const onMove = (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
 
-    // Drag right → view shifts left → X% decreases
+    if (!dragging) return;
+
+    const dx =
+      e.clientX - startX;
+
+    const dy =
+      e.clientY - startY;
+
+    if (
+      Math.abs(dx) > 2 ||
+      Math.abs(dy) > 2
+    ) {
+      moved = true;
+    }
+
     let nx = startOX;
     let ny = startOY;
-    if (ovx > 1) nx = startOX - (100 * dx) / ovx;
-    if (ovy > 1) ny = startOY - (100 * dy) / ovy;
-    nx = Math.max(0, Math.min(100, nx));
-    ny = Math.max(0, Math.min(100, ny));
 
-    el.style.objectPosition = `${nx}% ${ny}%`;
+    if (ovx > 1) {
+      nx =
+        startOX -
+        (100 * dx) / ovx;
+    }
+
+    if (ovy > 1) {
+      ny =
+        startOY -
+        (100 * dy) / ovy;
+    }
+
+    nx =
+      Math.max(
+        0,
+        Math.min(100, nx)
+      );
+
+    ny =
+      Math.max(
+        0,
+        Math.min(100, ny)
+      );
+
+    el.style.objectPosition =
+      `${nx}% ${ny}%`;
   };
 
   const onUp = async (e) => {
+
     if (!dragging) return;
+
     dragging = false;
-    inner.classList.remove('dragging');
-    try { el.releasePointerCapture?.(e.pointerId); } catch (_) {}
+
+    inner.classList.remove(
+      'dragging'
+    );
+
+    try {
+      el.releasePointerCapture?.(
+        e.pointerId
+      );
+    } catch (_) {}
 
     if (!moved) return;
 
-    const parts = el.style.objectPosition.split(/\s+/);
-    const nx = Math.max(0, Math.min(100, parseFloat(parts[0])));
-    const ny = Math.max(0, Math.min(100, parseFloat(parts[1])));
+    const parts =
+      el.style.objectPosition
+        .split(/\s+/);
+
+    const nx =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          parseFloat(parts[0])
+        )
+      );
+
+    const ny =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          parseFloat(parts[1])
+        )
+      );
+
     s.fit_offset_x = nx;
     s.fit_offset_y = ny;
 
-    // Show the reset button if we're no longer centered
-    let rb = inner.querySelector('.reset-pos');
-    if (!rb && (nx !== 50 || ny !== 50)) {
-      rb = document.createElement('button');
-      rb.className = 'reset-pos show';
-      rb.innerHTML = '⟲ توسيط';
-      rb.onclick = (ev) => { ev.stopPropagation(); resetPosition(); };
+    let rb =
+      inner.querySelector(
+        '.reset-pos'
+      );
+
+    if (
+      !rb &&
+      (nx !== 50 || ny !== 50)
+    ) {
+
+      rb =
+        document.createElement(
+          'button'
+        );
+
+      rb.className =
+        'reset-pos show';
+
+      rb.innerHTML =
+        '⟲ توسيط';
+
+      rb.onclick = (ev) => {
+        ev.stopPropagation();
+        resetPosition();
+      };
+
       inner.appendChild(rb);
-    } else if (rb && nx === 50 && ny === 50) {
-      rb.classList.remove('show');
+
+    } else if (
+      rb &&
+      nx === 50 &&
+      ny === 50
+    ) {
+
+      rb.classList.remove(
+        'show'
+      );
     }
 
     try {
-      await fetch(`/api/scene/${s.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fit_offset_x: nx, fit_offset_y: ny }),
-      });
+
+      const r =
+        await fetch(
+          `/api/scene/${s.id}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+            body: JSON.stringify({
+              fit_offset_x: nx,
+              fit_offset_y: ny,
+            }),
+          }
+        );
+
+      if (!r.ok) {
+        throw new Error(
+          'Failed to save position'
+        );
+      }
+
     } catch (err) {
-      toast('فشل حفظ الموضع', 'err');
+      toast(
+        'فشل حفظ الموضع',
+        'err'
+      );
     }
   };
 
-  el.addEventListener('pointerdown', onDown);
-  el.addEventListener('pointermove', onMove);
-  el.addEventListener('pointerup', onUp);
-  el.addEventListener('pointercancel', onUp);
+  el.addEventListener(
+    'pointerdown',
+    onDown
+  );
 
-  // Double-click = reset to center
-  el.addEventListener('dblclick', (e) => {
-    e.preventDefault();
-    resetPosition();
-  });
+  el.addEventListener(
+    'pointermove',
+    onMove
+  );
+
+  el.addEventListener(
+    'pointerup',
+    onUp
+  );
+
+  el.addEventListener(
+    'pointercancel',
+    onUp
+  );
+
+  el.addEventListener(
+    'dblclick',
+    (e) => {
+      e.preventDefault();
+      resetPosition();
+    }
+  );
 }
 
 async function resetPosition() {
   const inner = $('stageInner');
-  const el = inner.querySelector('img, video');
-  const s = state.scenes[currentIdx];
+
+  const el =
+    inner.querySelector(
+      'img, video'
+    );
+
+  const s = getCurrentScene();
+
   if (!el || !s) return;
 
-  el.style.objectPosition = '50% 50%';
+  el.style.objectPosition =
+    '50% 50%';
+
   s.fit_offset_x = 50;
   s.fit_offset_y = 50;
 
-  inner.querySelector('.reset-pos')?.classList.remove('show');
+  inner
+    .querySelector('.reset-pos')
+    ?.classList.remove('show');
 
   try {
-    await fetch(`/api/scene/${s.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fit_offset_x: 50, fit_offset_y: 50 }),
-    });
+
+    await fetch(
+      `/api/scene/${s.id}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type':
+            'application/json',
+        },
+        body: JSON.stringify({
+          fit_offset_x: 50,
+          fit_offset_y: 50,
+        }),
+      }
+    );
+
   } catch (_) {}
 }
 
+// ═══════════════════════════════════════════════════
+// Candidates
+// ═══════════════════════════════════════════════════
+
 function renderCandidates() {
-  const s = state.scenes[currentIdx];
+  const s = getCurrentScene();
+
   if (!s) return;
-  const list = $('candList');
 
-  const cands = (s.candidates || []).map((c) => {
-    const filename = c.split('/').pop();
-    const url = `/asset/${s.id}/${filename}`;
-    const active = (s.chosen_asset === c) ? 'active' : '';
-    return `<div class="cand ${active}" data-cand="${esc(c)}">
-      <img src="${url}" alt="" loading="lazy">
-    </div>`;
-  }).join('');
+  const list =
+    $('candList');
 
-  list.innerHTML = cands + `
-    <div class="cand-add" id="candAdd">
-      <div class="plus">+</div>
-      <div>مصدر مخصص</div>
+  const cands =
+    (s.candidates || [])
+      .map((c) => {
+
+        const active =
+          s.chosen_asset === c
+            ? 'active'
+            : '';
+
+        const video =
+          isVideoAsset(c);
+
+        const thumbUrl =
+          assetThumbUrl(
+            s.id,
+            c
+          );
+
+        return `
+          <div
+            class="cand ${active}"
+            data-cand="${esc(c)}"
+            title="${video ? 'فيديو' : 'صورة'}"
+          >
+            <img
+              src="${esc(thumbUrl)}"
+              alt=""
+              loading="lazy"
+              onerror="this.style.opacity='0.15'"
+            >
+
+            ${
+              video
+                ? `
+                  <span class="media-badge">
+                    ▶
+                  </span>
+                  <span class="media-label">
+                    فيديو
+                  </span>
+                `
+                : ''
+            }
+
+          </div>
+        `;
+      })
+      .join('');
+
+  list.innerHTML =
+    cands +
+    `
+      <div
+        class="cand-add graphic"
+        id="candGraphicAdd"
+      >
+        <div class="plus">✦</div>
+        <div>إنشاء مشهد رسومي</div>
+      </div>
+
+      <div
+        class="cand-add"
+        id="candAdd"
+      >
+        <div class="plus">+</div>
+        <div>مصدر مخصص</div>
+      </div>
+    `;
+
+  list
+    .querySelectorAll('.cand')
+    .forEach(el => {
+
+      el.onclick = () =>
+        selectCandidate(
+          el.dataset.cand
+        );
+    });
+
+  $('candAdd').onclick =
+    openModal;
+
+  $('candGraphicAdd').onclick =
+    openGraphicModal;
+}
+
+// ═══════════════════════════════════════════════════
+// Graphic creator
+// ═══════════════════════════════════════════════════
+
+async function loadGraphicTemplates() {
+  try {
+
+    const r =
+      await fetch(
+        '/api/graphic/templates'
+      );
+
+    if (!r.ok) {
+      throw new Error(
+        `Template request failed: ${r.status}`
+      );
+    }
+
+    const data =
+      await r.json();
+
+    graphicTemplates =
+      Array.isArray(data)
+        ? data
+        : (
+            Array.isArray(
+              data.templates
+            )
+              ? data.templates
+              : []
+          );
+
+    populateGraphicTemplateSelect();
+
+  } catch (err) {
+
+    console.error(err);
+
+    graphicTemplates = [];
+
+    const select =
+      $('graphicTemplateSelect');
+
+    select.innerHTML = `
+      <option value="">
+        تعذّر تحميل القوالب
+      </option>
+    `;
+
+    $('graphicFormScroll').innerHTML = `
+      <div class="form-empty">
+        تعذّر تحميل قوالب Remotion.
+        <br>
+        تحقق من endpoint الخاص بالقوالب.
+      </div>
+    `;
+
+    toast(
+      'تعذّر تحميل قوالب المشاهد الرسومية',
+      'err'
+    );
+  }
+}
+
+function populateGraphicTemplateSelect() {
+  const select =
+    $('graphicTemplateSelect');
+
+  if (!graphicTemplates.length) {
+
+    select.innerHTML = `
+      <option value="">
+        لا توجد قوالب متاحة
+      </option>
+    `;
+
+    $('graphicFormScroll').innerHTML = `
+      <div class="form-empty">
+        لا توجد قوالب رسومية متاحة.
+      </div>
+    `;
+
+    return;
+  }
+
+  select.innerHTML =
+    graphicTemplates
+      .map(t => `
+        <option value="${esc(t.id)}">
+          ${esc(
+            t.label ||
+            t.name ||
+            t.id
+          )}
+        </option>
+      `)
+      .join('');
+
+  const s =
+    getCurrentScene();
+
+  const existingTemplate =
+    s?.graphic_template;
+
+  const found =
+    graphicTemplates.find(
+      t => t.id === existingTemplate
+    );
+
+  if (found) {
+    select.value =
+      existingTemplate;
+  }
+
+  renderGraphicForm();
+}
+
+function getSelectedGraphicTemplate() {
+  const id =
+    $('graphicTemplateSelect')?.value;
+
+  return graphicTemplates.find(
+    t => t.id === id
+  ) || null;
+}
+
+function renderGraphicForm() {
+  const template =
+    getSelectedGraphicTemplate();
+
+  const container =
+    $('graphicFormScroll');
+
+  const meta =
+    $('graphicTemplateMeta');
+
+  if (!template) {
+
+    meta.innerHTML = '';
+
+    container.innerHTML = `
+      <div class="form-empty">
+        اختر قالباً للبدء.
+      </div>
+    `;
+
+    return;
+  }
+
+  const defaults =
+    (
+      template.defaults &&
+      typeof template.defaults === 'object'
+    )
+      ? template.defaults
+      : {};
+
+  const s =
+    getCurrentScene();
+
+  meta.innerHTML = `
+    <span class="chip gold">
+      ${esc(template.id)}
+    </span>
+
+    <span class="chip">
+      ${esc(
+        template.label ||
+        template.name ||
+        template.id
+      )}
+    </span>
+
+    <span class="chip">
+      ${Number(
+        template.default_duration_in_frames ||
+        0
+      )} frames
+    </span>
+  `;
+
+  const currentProps =
+    (
+      s?.graphic_template === template.id &&
+      s?.graphic_props &&
+      typeof s.graphic_props === 'object'
+    )
+      ? s.graphic_props
+      : {};
+
+  const keys =
+    Object.keys(defaults);
+
+  const durationSeconds =
+    Math.max(
+      0.1,
+      Number(s?.end || 0) -
+      Number(s?.start || 0)
+    );
+
+  let html = `
+    <div class="duration-row">
+
+      <div class="field-group">
+
+        <div class="field-label">
+          مدة المشهد — ثواني
+        </div>
+
+        <input
+          class="graphic-number"
+          id="graphicDurationSeconds"
+          type="number"
+          min="0.1"
+          step="0.1"
+          value="${durationSeconds.toFixed(2)}"
+        >
+
+        <div class="field-help">
+          افتراضياً مدة المشهد الحالي.
+        </div>
+
+      </div>
+
+      <div class="field-group">
+
+        <div class="field-label">
+          مدة المشهد — Frames
+        </div>
+
+        <input
+          class="graphic-number"
+          id="graphicDurationFrames"
+          type="number"
+          min="1"
+          step="1"
+          value="${Math.max(
+            1,
+            Math.round(durationSeconds * 30)
+          )}"
+        >
+
+        <div class="field-help">
+          30 FPS.
+        </div>
+
+      </div>
+
     </div>
   `;
 
-  list.querySelectorAll('.cand').forEach(el => {
-    el.onclick = () => selectCandidate(el.dataset.cand);
-  });
-  $('candAdd').onclick = openModal;
+  if (!keys.length) {
+
+    html += `
+      <div class="form-empty">
+        هذا القالب لا يحتاج خصائص إضافية.
+      </div>
+    `;
+
+  } else {
+
+    for (const key of keys) {
+
+      const value =
+        currentProps[key] !== undefined
+          ? currentProps[key]
+          : defaults[key];
+
+      html +=
+        renderGraphicField(
+          key,
+          value
+        );
+    }
+  }
+
+  container.innerHTML = html;
+
+  const secondsInput =
+    $('graphicDurationSeconds');
+
+  const framesInput =
+    $('graphicDurationFrames');
+
+  if (secondsInput && framesInput) {
+
+    secondsInput.addEventListener(
+      'input',
+      () => {
+
+        const seconds =
+          Number(
+            secondsInput.value
+          );
+
+        if (
+          Number.isFinite(seconds) &&
+          seconds > 0
+        ) {
+
+          framesInput.value =
+            Math.max(
+              1,
+              Math.round(
+                seconds * 30
+              )
+            );
+        }
+      }
+    );
+
+    framesInput.addEventListener(
+      'input',
+      () => {
+
+        const frames =
+          Number(
+            framesInput.value
+          );
+
+        if (
+          Number.isFinite(frames) &&
+          frames > 0
+        ) {
+
+          secondsInput.value =
+            (
+              frames / 30
+            ).toFixed(2);
+        }
+      }
+    );
+  }
 }
 
-function renderDetails() {
-  const s = state.scenes[currentIdx];
-  if (!s) return;
-  const body = $('detailsBody');
+function renderGraphicField(
+  key,
+  value
+) {
+  const safeKey =
+    esc(key);
 
-  const arQuery = (s.arabic_query || '').trim();
-  const enQuery = (s.english_query || '').trim();
+  const label =
+    formatFieldLabel(key);
+
+  const type =
+    detectFieldType(value);
+
+  if (type === 'boolean') {
+
+    return `
+      <div class="graphic-checkbox-row">
+
+        <input
+          class="graphic-checkbox"
+          type="checkbox"
+          id="graphicField_${safeKey}"
+          data-graphic-key="${safeKey}"
+          ${value ? 'checked' : ''}
+        >
+
+        <label
+          for="graphicField_${safeKey}"
+        >
+          ${esc(label)}
+        </label>
+
+      </div>
+    `;
+  }
+
+  if (type === 'number') {
+
+    return `
+      <div class="field-group">
+
+        <div class="field-label">
+          ${esc(label)}
+        </div>
+
+        <input
+          class="graphic-number"
+          type="number"
+          step="any"
+          data-graphic-key="${safeKey}"
+          value="${esc(value)}"
+        >
+
+      </div>
+    `;
+  }
+
+  if (type === 'object' || type === 'array') {
+
+    let jsonValue = '';
+
+    try {
+      jsonValue =
+        JSON.stringify(
+          value,
+          null,
+          2
+        );
+    } catch (_) {
+      jsonValue =
+        String(value ?? '');
+    }
+
+    return `
+      <div class="field-group">
+
+        <div class="field-label">
+          ${esc(label)}
+        </div>
+
+        <textarea
+          class="graphic-textarea"
+          data-graphic-key="${safeKey}"
+          data-graphic-type="${type}"
+          spellcheck="false"
+        >${esc(jsonValue)}</textarea>
+
+        <div class="field-help">
+          أدخل JSON صالحاً لهذا الحقل.
+        </div>
+
+      </div>
+    `;
+  }
+
+  return `
+    <div class="field-group">
+
+      <div class="field-label">
+        ${esc(label)}
+      </div>
+
+      <input
+        class="graphic-input"
+        type="text"
+        data-graphic-key="${safeKey}"
+        value="${esc(value ?? '')}"
+      >
+
+    </div>
+  `;
+}
+
+function detectFieldType(value) {
+  if (typeof value === 'boolean') {
+    return 'boolean';
+  }
+
+  if (typeof value === 'number') {
+    return 'number';
+  }
+
+  if (Array.isArray(value)) {
+    return 'array';
+  }
+
+  if (
+    value !== null &&
+    typeof value === 'object'
+  ) {
+    return 'object';
+  }
+
+  return 'string';
+}
+
+function formatFieldLabel(key) {
+  return String(key || '')
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function collectGraphicProps() {
+  const container =
+    $('graphicFormScroll');
+
+  const props = {};
+
+  container
+    .querySelectorAll(
+      '[data-graphic-key]'
+    )
+    .forEach(el => {
+
+      const key =
+        el.dataset.graphicKey;
+
+      if (!key) return;
+
+      if (
+        el.type === 'checkbox'
+      ) {
+
+        props[key] =
+          el.checked;
+
+        return;
+      }
+
+      if (
+        el.dataset.graphicType ===
+          'object' ||
+        el.dataset.graphicType ===
+          'array'
+      ) {
+
+        const raw =
+          el.value.trim();
+
+        if (!raw) {
+          props[key] =
+            el.dataset.graphicType ===
+              'array'
+              ? []
+              : {};
+          return;
+        }
+
+        try {
+          props[key] =
+            JSON.parse(raw);
+        } catch (err) {
+          throw new Error(
+            `JSON غير صالح في الحقل: ${key}`
+          );
+        }
+
+        return;
+      }
+
+      if (
+        el.type === 'number'
+      ) {
+
+        const n =
+          Number(el.value);
+
+        props[key] =
+          Number.isFinite(n)
+            ? n
+            : el.value;
+
+        return;
+      }
+
+      props[key] =
+        el.value;
+    });
+
+  return props;
+}
+
+function getGraphicDurationFrames() {
+  const input =
+    $('graphicDurationFrames');
+
+  const value =
+    Number(input?.value);
+
+  if (
+    Number.isFinite(value) &&
+    value > 0
+  ) {
+    return Math.round(value);
+  }
+
+  const s =
+    getCurrentScene();
+
+  const seconds =
+    Math.max(
+      0.1,
+      Number(s?.end || 0) -
+      Number(s?.start || 0)
+    );
+
+  return Math.max(
+    1,
+    Math.round(seconds * 30)
+  );
+}
+
+function openGraphicModal() {
+  const s =
+    getCurrentScene();
+
+  if (!s) return;
+
+  $('graphicModal')
+    .classList.add('show');
+
+  $('createGraphicConfirm')
+    .disabled = false;
+
+  graphicCreating = false;
+
+  hideGraphicProgress();
+
+  if (!graphicTemplates.length) {
+    loadGraphicTemplates();
+  } else {
+    populateGraphicTemplateSelect();
+  }
+}
+
+function closeGraphicModal() {
+  if (graphicCreating) {
+    return;
+  }
+
+  $('graphicModal')
+    .classList.remove('show');
+
+  hideGraphicProgress();
+}
+
+function hideGraphicProgress() {
+  $('graphicRenderProgress')
+    .classList.remove('show');
+
+  $('graphicRenderProgressFill')
+    .style.width = '0%';
+
+  $('graphicRenderPercent')
+    .textContent = '—';
+}
+
+function showGraphicProgress(
+  message = 'جارٍ تجهيز المشهد…'
+) {
+  $('graphicRenderProgress')
+    .classList.add('show');
+
+  $('graphicRenderStatus')
+    .textContent = message;
+}
+
+function updateGraphicProgress(
+  status,
+  progress
+) {
+  const messages = {
+    queued:
+      'جارٍ تجهيز المشهد…',
+
+    rendering:
+      'جارٍ إخراج الفيديو…',
+
+    done:
+      'اكتمل الإخراج — اختر الفيديو من خيارات المشهد.',
+
+    error:
+      'حدث خطأ أثناء إخراج المشهد.',
+  };
+
+  $('graphicRenderStatus')
+    .textContent =
+      messages[status] ||
+      'جارٍ معالجة المشهد…';
+
+  const fill =
+    $('graphicRenderProgressFill');
+
+  const percent =
+    $('graphicRenderPercent');
+
+  if (
+    typeof progress === 'number' &&
+    Number.isFinite(progress)
+  ) {
+
+    const pct =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          progress
+        )
+      );
+
+    fill.style.width =
+      `${pct}%`;
+
+    percent.textContent =
+      `${Math.round(pct)}%`;
+
+  } else {
+
+    fill.style.width =
+      status === 'done'
+        ? '100%'
+        : '35%';
+
+    percent.textContent =
+      status === 'done'
+        ? '100%'
+        : '…';
+  }
+}
+
+async function createGraphic() {
+  if (graphicCreating) {
+    return;
+  }
+
+  const s =
+    getCurrentScene();
+
+  if (!s) return;
+
+  const template =
+    getSelectedGraphicTemplate();
+
+  if (!template) {
+
+    toast(
+      'اختر قالباً أولاً',
+      'err'
+    );
+
+    return;
+  }
+
+  let props;
+
+  try {
+
+    props =
+      collectGraphicProps();
+
+  } catch (err) {
+
+    toast(
+      err.message ||
+      'تحقق من الحقول',
+      'err'
+    );
+
+    return;
+  }
+
+  const durationInFrames =
+    getGraphicDurationFrames();
+
+  graphicCreating = true;
+
+  $('createGraphicConfirm')
+    .disabled = true;
+
+  $('createGraphicCancel')
+    .disabled = true;
+
+  showGraphicProgress(
+    'جارٍ تجهيز المشهد…'
+  );
+
+  try {
+
+    const r =
+      await fetch(
+        `/api/scene/${s.id}/create-graphic`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          body: JSON.stringify({
+            template: template.id,
+
+            props: {
+              ...props,
+              durationInFrames,
+            },
+          }),
+        }
+      );
+
+    const data =
+      await r.json();
+
+    if (!r.ok) {
+      throw new Error(
+        data.error ||
+        'فشل إنشاء مهمة الإخراج'
+      );
+    }
+
+    const jobId =
+      data.job_id ||
+      data.id;
+
+    if (!jobId) {
+
+      if (data.scene) {
+
+        state.scenes[currentIdx] =
+          data.scene;
+
+        renderAll();
+
+        updateGraphicProgress(
+          'done',
+          100
+        );
+
+        toast(
+          'اكتمل الإخراج — اختر الفيديو من خيارات المشهد.',
+          'ok'
+        );
+
+        setTimeout(
+          closeGraphicModal,
+          900
+        );
+
+        return;
+      }
+
+      throw new Error(
+        'الخادم لم يُرجع job_id'
+      );
+    }
+
+    await pollGraphicJob(
+      jobId
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+    updateGraphicProgress(
+      'error',
+      0
+    );
+
+    toast(
+      err.message ||
+      'فشل إنشاء المشهد الرسومي',
+      'err'
+    );
+
+  } finally {
+
+    graphicCreating = false;
+
+    $('createGraphicConfirm')
+      .disabled = false;
+
+    $('createGraphicCancel')
+      .disabled = false;
+  }
+}
+
+async function pollGraphicJob(jobId) {
+  clearTimeout(
+    graphicJobPollTimer
+  );
+
+  const startedAt =
+    Date.now();
+
+  const maxWait =
+    20 * 60 * 1000;
+
+  while (true) {
+
+    if (
+      Date.now() -
+      startedAt >
+      maxWait
+    ) {
+
+      throw new Error(
+        'انتهت مهلة انتظار الإخراج'
+      );
+    }
+
+    const r =
+      await fetch(
+        `/api/graphic/jobs/${encodeURIComponent(jobId)}`,
+        {
+          cache: 'no-store',
+        }
+      );
+
+    const data =
+      await r.json();
+
+    if (!r.ok) {
+
+      throw new Error(
+        data.error ||
+        'تعذّر قراءة حالة الإخراج'
+      );
+    }
+
+    const status =
+      data.status ||
+      'rendering';
+
+    const progress =
+      typeof data.progress === 'number'
+        ? data.progress
+        : null;
+
+    updateGraphicProgress(
+      status,
+      progress
+    );
+
+    if (
+      status === 'done' ||
+      status === 'completed'
+    ) {
+
+      const scene =
+        data.scene ||
+        data.result?.scene;
+
+      if (scene) {
+
+        const idx =
+          state.scenes.findIndex(
+            x =>
+              String(x.id) ===
+              String(scene.id)
+          );
+
+        if (idx >= 0) {
+
+          state.scenes[idx] =
+            scene;
+
+        } else {
+
+          state.scenes[currentIdx] =
+            scene;
+        }
+
+      } else {
+
+        // Fallback: refresh state
+        await loadState();
+      }
+
+      renderAll();
+
+      updateGraphicProgress(
+        'done',
+        100
+      );
+
+      toast(
+        'اكتمل الإخراج — اختر الفيديو من خيارات المشهد.',
+        'ok'
+      );
+
+      setTimeout(
+        closeGraphicModal,
+        1200
+      );
+
+      return;
+    }
+
+    if (
+      status === 'error' ||
+      status === 'failed'
+    ) {
+
+      throw new Error(
+        data.error ||
+        data.message ||
+        'فشل إخراج المشهد الرسومي'
+      );
+    }
+
+    await new Promise(
+      resolve => {
+        graphicJobPollTimer =
+          setTimeout(
+            resolve,
+            700
+          );
+      }
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// Graphic rerender
+// ═══════════════════════════════════════════════════
+
+async function rerenderGraphic(
+  replan
+) {
+  const s =
+    getCurrentScene();
+
+  if (!s) return;
+
+  const body = {};
+
+  if (!replan) {
+
+    const raw =
+      $('graphicProps')?.value ??
+      '';
+
+    try {
+
+      body.plan = {
+        template:
+          s.graphic_template,
+
+        props:
+          JSON.parse(raw),
+      };
+
+    } catch (e) {
+
+      toast(
+        'JSON غير صالح',
+        'err'
+      );
+
+      return;
+    }
+  }
+
+  toast(
+    'جارٍ الإخراج…'
+  );
+
+  try {
+
+    const r =
+      await fetch(
+        `/api/scene/${s.id}/rerender-graphic`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          body:
+            JSON.stringify(body),
+        }
+      );
+
+    const data =
+      await r.json();
+
+    if (!r.ok) {
+
+      toast(
+        data.error ||
+        'فشل الإخراج',
+        'err'
+      );
+
+      return;
+    }
+
+    if (data.scene) {
+
+      state.scenes[currentIdx] =
+        data.scene;
+
+    } else {
+
+      await loadState();
+    }
+
+    renderAll();
+
+    toast(
+      'تم التحديث',
+      'ok'
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+    toast(
+      'فشل الاتصال بالخادم',
+      'err'
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// Details
+// ═══════════════════════════════════════════════════
+
+function renderDetails() {
+  const s =
+    getCurrentScene();
+
+  if (!s) return;
+
+  const body =
+    $('detailsBody');
+
+  const arQuery =
+    (s.arabic_query || '').trim();
+
+  const enQuery =
+    (s.english_query || '').trim();
+  const volumePercent = Math.round(
+    Math.max(
+      0,
+      Math.min(
+        1,
+        Number(s.volume ?? 1)
+      )
+    ) * 100
+  );
 
   body.innerHTML = `
+
     <div class="transcription">
-      <div class="transcription-label">النص الأصلي</div>
-      <div class="transcription-text">${esc(s.text)}</div>
+
+      <div class="transcription-label">
+        النص الأصلي
+      </div>
+
+      <div class="transcription-text">
+        ${esc(s.text)}
+      </div>
+
     </div>
 
+    ${
+      s.is_graphic
+        ? `
+          <div class="graphic-panel">
+
+            <div class="kw-col-title">
+              مشهد رسومي —
+              ${esc(
+                s.graphic_template || ''
+              )}
+            </div>
+
+            <textarea
+              id="graphicProps"
+              rows="8"
+              placeholder="props JSON"
+            >${esc(
+              JSON.stringify(
+                s.graphic_props || {},
+                null,
+                2
+              )
+            )}</textarea>
+
+            <div class="btn-row">
+
+              <button
+                class="btn primary"
+                id="rerenderGraphic"
+              >
+                إعادة الإخراج
+              </button>
+
+              <button
+                class="btn"
+                id="replanGraphic"
+              >
+                تخطيط جديد
+              </button>
+
+            </div>
+
+          </div>
+        `
+        : ''
+    }
+
     <div>
-      <div class="keywords-label">الكلمات المفتاحية</div>
-      <div class="keywords-grid">
-        ${arQuery ? `
-          <div class="kw-row">
-            <div class="kw-col-title">بالعربية</div>
-            <div class="kw-full" data-copy="${esc(arQuery)}" data-kind="ar">
-              <span class="kw-text">${esc(arQuery)}</span>
-              <span class="copy-icon">⧉</span>
-            </div>
-          </div>
-        ` : ''}
-        ${enQuery ? `
-          <div class="kw-row">
-            <div class="kw-col-title">بالإنجليزية</div>
-            <div class="kw-full" data-copy="${esc(enQuery)}" data-kind="en">
-              <span class="kw-text en">${esc(enQuery)}</span>
-              <span class="copy-icon">⧉</span>
-            </div>
-          </div>
-        ` : ''}
+
+      <div class="keywords-label">
+        الكلمات المفتاحية
       </div>
+
+      <div class="keywords-grid">
+
+        ${
+          arQuery
+            ? `
+              <div class="kw-row">
+
+                <div class="kw-col-title">
+                  بالعربية
+                </div>
+
+                <div
+                  class="kw-full"
+                  data-copy="${esc(arQuery)}"
+                  data-kind="ar"
+                >
+
+                  <span class="kw-text">
+                    ${esc(arQuery)}
+                  </span>
+
+                  <span class="copy-icon">
+                    ⧉
+                  </span>
+
+                </div>
+
+              </div>
+            `
+            : ''
+        }
+
+        ${
+          enQuery
+            ? `
+              <div class="kw-row">
+
+                <div class="kw-col-title">
+                  بالإنجليزية
+                </div>
+
+                <div
+                  class="kw-full"
+                  data-copy="${esc(enQuery)}"
+                  data-kind="en"
+                >
+
+                  <span class="kw-text en">
+                    ${esc(enQuery)}
+                  </span>
+
+                  <span class="copy-icon">
+                    ⧉
+                  </span>
+
+                </div>
+
+              </div>
+            `
+            : ''
+        }
+
+      </div>
+
+    </div>
+    <div class="volume-control">
+
+      <div class="volume-header">
+
+        <span class="volume-label">
+          صوت المقطع
+        </span>
+
+        <span
+          class="volume-value"
+          id="volumeValue"
+        >
+          ${volumePercent}%
+        </span>
+
+      </div>
+
+      <div class="volume-row">
+
+        <input
+          class="volume-slider"
+          id="volumeSlider"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="${volumePercent}"
+          aria-label="مستوى صوت المقطع"
+        />
+
+        <button
+          type="button"
+          class="volume-mute-btn"
+          id="volumeMute"
+          title="كتم الصوت"
+        >
+          🔇
+        </button>
+
+      </div>
+
     </div>
 
     <div class="custom-url-block">
-      <input type="text" id="inlineUrl" placeholder="رابط صورة أو فيديو مخصص…" />
+
+      <input
+        type="text"
+        id="inlineUrl"
+        placeholder="رابط صورة أو فيديو مخصص…"
+      />
+
       <div class="btn-row">
-        <button class="btn primary" id="inlineApply">تطبيق</button>
-        <button class="btn" id="inlineClear">مسح</button>
+
+        <button
+          class="btn primary"
+          id="inlineApply"
+        >
+          تطبيق
+        </button>
+
+        <button
+          class="btn"
+          id="inlineClear"
+        >
+          مسح
+        </button>
+
       </div>
-      <div class="msg" id="inlineMsg"></div>
+
+      <div
+        class="msg"
+        id="inlineMsg"
+      ></div>
+
     </div>
 
     <div>
-      <div class="keywords-label">حالة المشهد</div>
-      <div class="chips" style="margin-top:10px">
-        <span class="chip">${esc(s.visual_type)}</span>
-        ${s.is_important ? '<span class="chip gold">★ مشهد مهم</span>' : ''}
-        ${s.chosen_asset ? '' : '<span class="chip warn">لا توجد صورة</span>'}
+
+      <div class="keywords-label">
+        حالة المشهد
       </div>
+
+      <div
+        class="chips"
+        style="margin-top:10px"
+      >
+
+        <span class="chip">
+          ${esc(s.visual_type)}
+        </span>
+
+        ${
+          s.is_important
+            ? `
+              <span class="chip gold">
+                ★ مشهد مهم
+              </span>
+            `
+            : ''
+        }
+
+        ${
+          s.chosen_asset
+            ? `
+              <span class="chip gold">
+                ✓ تم اختيار أصل
+              </span>
+            `
+            : `
+              <span class="chip warn">
+                لا توجد صورة
+              </span>
+            `
+        }
+
+        ${
+          s.chosen_url &&
+          isVideoAsset(s.chosen_url)
+            ? `
+              <span class="chip gold">
+                ▶ فيديو
+              </span>
+            `
+            : ''
+        }
+
+      </div>
+
     </div>
+
   `;
 
-  body.querySelectorAll('.kw-full').forEach(el => {
-    el.onclick = () => {
-      const text = el.dataset.copy;
-      copyToClipboard(text).then(ok => {
-        if (!ok) { toast('تعذّر النسخ', 'err'); return; }
-        el.classList.add('copied');
-        el.querySelector('.copy-icon').textContent = '✓';
-        toast('تم النسخ — يمكنك البحث يدوياً', 'ok');
-        setTimeout(() => {
-          el.classList.remove('copied');
-          el.querySelector('.copy-icon').textContent = '⧉';
-        }, 1800);
-      });
-    };
-  });
+  const rg =
+    $('rerenderGraphic');
 
-  $('inlineApply').onclick = () => {
-    const url = $('inlineUrl').value.trim();
-    if (url) applyCustomUrl(url, 'inlineMsg');
-  };
-  $('inlineClear').onclick = () => {
-    $('inlineUrl').value = '';
-    $('inlineMsg').className = 'msg';
-  };
-  $('inlineUrl').addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      const url = $('inlineUrl').value.trim();
-      if (url) applyCustomUrl(url, 'inlineMsg');
-    }
-  });
+  if (rg) {
+    rg.onclick =
+      () => rerenderGraphic(false);
+  }
+
+  const rp =
+    $('replanGraphic');
+
+  if (rp) {
+    rp.onclick =
+      () => rerenderGraphic(true);
+  }
+
+  body
+    .querySelectorAll('.kw-full')
+    .forEach(el => {
+
+      el.onclick = () => {
+
+        const text =
+          el.dataset.copy;
+
+        copyToClipboard(text)
+          .then(ok => {
+
+            if (!ok) {
+
+              toast(
+                'تعذّر النسخ',
+                'err'
+              );
+
+              return;
+            }
+
+            el.classList.add(
+              'copied'
+            );
+
+            el.querySelector(
+              '.copy-icon'
+            ).textContent = '✓';
+
+            toast(
+              'تم النسخ — يمكنك البحث يدوياً',
+              'ok'
+            );
+
+            setTimeout(() => {
+
+              el.classList.remove(
+                'copied'
+              );
+
+              el.querySelector(
+                '.copy-icon'
+              ).textContent = '⧉';
+
+            }, 1800);
+          });
+      };
+    });
+  // ═══════════════════════════════════════════════════
+  // Volume control
+  // ═══════════════════════════════════════════════════
+
+  const volumeSlider =
+    $('volumeSlider');
+
+  const volumeValue =
+    $('volumeValue');
+
+  const volumeMute =
+    $('volumeMute');
+
+  if (volumeSlider) {
+
+    volumeSlider.oninput = () => {
+
+      const value =
+        Number(volumeSlider.value);
+
+      if (volumeValue) {
+        volumeValue.textContent =
+          `${value}%`;
+      }
+
+    };
+
+    volumeSlider.onchange = async () => {
+
+      const value =
+        Number(volumeSlider.value);
+
+      const volume =
+        Math.max(
+          0,
+          Math.min(
+            1,
+            value / 100
+          )
+        );
+
+      // Update local state immediately.
+      s.volume = volume;
+
+      try {
+
+        const r =
+          await fetch(
+            `/api/scene/${s.id}`,
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              body: JSON.stringify({
+                volume,
+              }),
+            }
+          );
+
+        const data =
+          await r.json();
+
+        if (!r.ok) {
+
+          throw new Error(
+            data.error ||
+            'فشل حفظ مستوى الصوت'
+          );
+
+        }
+
+        // Keep the server response as the source of truth.
+        state.scenes[currentIdx] =
+          data.scene;
+
+        toast(
+          `مستوى صوت المقطع: ${value}%`,
+          'ok'
+        );
+
+      } catch (err) {
+
+        console.error(err);
+
+        toast(
+          'فشل حفظ مستوى الصوت',
+          'err'
+        );
+
+      }
+
+    };
+
+  }
+
+  if (volumeMute) {
+
+    volumeMute.onclick = async () => {
+
+      if (!volumeSlider) return;
+
+      const currentValue =
+        Number(volumeSlider.value);
+
+      // Mute → remember current level.
+      if (currentValue > 0) {
+
+        volumeSlider.dataset.previousVolume =
+          String(currentValue);
+
+        volumeSlider.value = '0';
+
+        if (volumeValue) {
+          volumeValue.textContent = '0%';
+        }
+
+        s.volume = 0;
+
+      } else {
+
+        // Unmute → restore previous level.
+        const previous =
+          Number(
+            volumeSlider.dataset.previousVolume ||
+            100
+          );
+
+        const restored =
+          Math.max(
+            1,
+            Math.min(
+              100,
+              previous
+            )
+          );
+
+        volumeSlider.value =
+          String(restored);
+
+        if (volumeValue) {
+          volumeValue.textContent =
+            `${restored}%`;
+        }
+
+        s.volume =
+          restored / 100;
+      }
+
+      try {
+
+        const volume =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              Number(volumeSlider.value) / 100
+            )
+          );
+
+        const r =
+          await fetch(
+            `/api/scene/${s.id}`,
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              body: JSON.stringify({
+                volume,
+              }),
+            }
+          );
+
+        const data =
+          await r.json();
+
+        if (!r.ok) {
+
+          throw new Error(
+            data.error ||
+            'فشل حفظ مستوى الصوت'
+          );
+
+        }
+
+        state.scenes[currentIdx] =
+          data.scene;
+
+        toast(
+          volume === 0
+            ? 'تم كتم صوت المقطع'
+            : `تم استعادة الصوت إلى ${Math.round(volume * 100)}%`,
+          'ok'
+        );
+
+      } catch (err) {
+
+        console.error(err);
+
+        toast(
+          'فشل حفظ مستوى الصوت',
+          'err'
+        );
+
+        // Refresh the scene from server state.
+        await loadState();
+
+      }
+
+    };
+
+  }
+
+  const inlineApply =
+    $('inlineApply');
+
+  if (inlineApply) {
+
+    inlineApply.onclick = () => {
+
+      const url =
+        $('inlineUrl')
+          .value
+          .trim();
+
+      if (url) {
+        applyCustomUrl(
+          url,
+          'inlineMsg'
+        );
+      }
+    };
+  }
+
+  const inlineClear =
+    $('inlineClear');
+
+  if (inlineClear) {
+
+    inlineClear.onclick = () => {
+
+      $('inlineUrl').value = '';
+
+      $('inlineMsg').className =
+        'msg';
+    };
+  }
+
+  const inlineUrl =
+    $('inlineUrl');
+
+  if (inlineUrl) {
+
+    inlineUrl.addEventListener(
+      'keydown',
+      e => {
+
+        if (
+          e.key === 'Enter'
+        ) {
+
+          const url =
+            inlineUrl.value.trim();
+
+          if (url) {
+            applyCustomUrl(
+              url,
+              'inlineMsg'
+            );
+          }
+        }
+      }
+    );
+  }
 }
 
-function renderTimeline() {
-  const tl = $('timeline');
-  tl.innerHTML = state.scenes.map((s, i) => {
-    const src = s.chosen_url;
-    const title = (s.text || '').trim().split(/[،.؟!]/)[0].slice(0, 40) || `مشهد ${i + 1}`;
-    const thumb = src
-      ? `<img src="${src}" alt="">`
-      : `<div class="empty">لا توجد صورة</div>`;
-    const cls = [
-      'thumb',
-      i === currentIdx ? 'active' : '',
-      s.is_important ? 'important' : '',
-      src ? '' : 'no-asset',
-    ].join(' ');
-    return `<div class="${cls}" data-idx="${i}">
-      ${thumb}
-      <div class="duration">${(s.end - s.start).toFixed(1)}s</div>
-      <div class="overlay">
-        <span class="num">${String(i + 1).padStart(2, '0')}</span>
-        <span class="title">${esc(title)}</span>
-      </div>
-    </div>`;
-  }).join('');
+// ═══════════════════════════════════════════════════
+// Timeline
+// ═══════════════════════════════════════════════════
 
-  tl.querySelectorAll('.thumb').forEach(el => {
-    el.onclick = () => goTo(parseInt(el.dataset.idx, 10));
-  });
+function renderTimeline() {
+  const tl =
+    $('timeline');
+
+  tl.innerHTML =
+    state.scenes
+      .map((s, i) => {
+
+        const src =
+          s.chosen_url;
+
+        const title =
+          (s.text || '')
+            .trim()
+            .split(/[،.؟!]/)[0]
+            .slice(0, 40) ||
+          `مشهد ${i + 1}`;
+
+        const video =
+          isVideoAsset(src);
+
+        const thumb =
+          src
+            ? `
+              <img
+                src="${esc(
+                  assetThumbUrl(
+                    s.id,
+                    src
+                  )
+                )}"
+                alt=""
+                loading="lazy"
+                onerror="this.style.opacity='0.15'"
+              >
+
+              ${
+                video
+                  ? `
+                    <span class="media-badge">
+                      ▶
+                    </span>
+                  `
+                  : ''
+              }
+            `
+            : `
+              <div class="empty">
+                لا توجد صورة
+              </div>
+            `;
+
+        const cls = [
+          'thumb',
+          i === currentIdx
+            ? 'active'
+            : '',
+          s.is_important
+            ? 'important'
+            : '',
+          src
+            ? ''
+            : 'no-asset',
+        ].join(' ');
+
+        return `
+          <div
+            class="${cls}"
+            data-idx="${i}"
+          >
+
+            ${thumb}
+
+            <div class="duration">
+              ${(
+                Number(s.end || 0) -
+                Number(s.start || 0)
+              ).toFixed(1)}s
+            </div>
+
+            <div class="overlay">
+
+              <span class="num">
+                ${String(i + 1).padStart(2, '0')}
+              </span>
+
+              <span class="title">
+                ${esc(title)}
+              </span>
+
+            </div>
+
+          </div>
+        `;
+      })
+      .join('');
+
+  tl
+    .querySelectorAll('.thumb')
+    .forEach(el => {
+
+      el.onclick = () =>
+        goTo(
+          parseInt(
+            el.dataset.idx,
+            10
+          )
+        );
+    });
 }
 
 function goTo(idx) {
-  if (idx < 0 || idx >= state.scenes.length) return;
+  if (
+    idx < 0 ||
+    idx >= state.scenes.length
+  ) {
+    return;
+  }
+
   currentIdx = idx;
+
   renderAll();
-  const active = document.querySelector('.thumb.active');
-  if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+  const active =
+    document.querySelector(
+      '.thumb.active'
+    );
+
+  if (active) {
+
+    active.scrollIntoView({
+      behavior: 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════
 // Actions
 // ═══════════════════════════════════════════════════
+
 async function selectCandidate(path) {
-  const s = state.scenes[currentIdx];
-  const r = await fetch(`/api/scene/${s.id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chosen_asset: path }),
-  });
-  if (r.ok) {
-    const data = await r.json();
-    state.scenes[currentIdx] = data.scene;
+  const s =
+    getCurrentScene();
+
+  if (!s) return;
+
+  try {
+
+    const r =
+      await fetch(
+        `/api/scene/${s.id}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          body: JSON.stringify({
+            chosen_asset: path,
+          }),
+        }
+      );
+
+    const data =
+      await r.json();
+
+    if (!r.ok) {
+
+      toast(
+        data.error ||
+        'فشل اختيار الأصل',
+        'err'
+      );
+
+      return;
+    }
+
+    state.scenes[currentIdx] =
+      data.scene;
+
     renderAll();
-    toast('تم اختيار المشهد', 'ok');
+
+    toast(
+      'تم اختيار المشهد',
+      'ok'
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+    toast(
+      'فشل الاتصال بالخادم',
+      'err'
+    );
   }
 }
 
-async function applyCustomUrl(url, msgId) {
-  const s = state.scenes[currentIdx];
-  const msg = $(msgId);
-  msg.className = 'msg show';
-  msg.textContent = 'جارٍ التنزيل…';
-  msg.style.borderColor = 'var(--gold)';
+async function applyCustomUrl(
+  url,
+  msgId
+) {
+  const s =
+    getCurrentScene();
 
-  const r = await fetch(`/api/scene/${s.id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ asset_url: url }),
-  });
-  const data = await r.json();
-  if (!r.ok) {
-    msg.className = 'msg show err';
-    msg.textContent = data.error || 'فشل التنزيل';
-    return;
+  const msg =
+    $(msgId);
+
+  if (!s || !msg) return;
+
+  msg.className =
+    'msg show';
+
+  msg.textContent =
+    'جارٍ التنزيل…';
+
+  msg.style.borderColor =
+    'var(--gold)';
+
+  try {
+
+    const r =
+      await fetch(
+        `/api/scene/${s.id}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          body: JSON.stringify({
+            asset_url: url,
+          }),
+        }
+      );
+
+    const data =
+      await r.json();
+
+    if (!r.ok) {
+
+      msg.className =
+        'msg show err';
+
+      msg.textContent =
+        data.error ||
+        'فشل التنزيل';
+
+      return;
+    }
+
+    state.scenes[currentIdx] =
+      data.scene;
+
+    msg.className =
+      'msg show ok';
+
+    msg.textContent =
+      '✓ تم تطبيق المصدر';
+
+    renderAll();
+
+    toast(
+      'تم تطبيق المصدر بنجاح',
+      'ok'
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+    msg.className =
+      'msg show err';
+
+    msg.textContent =
+      'فشل الاتصال بالخادم';
   }
-  state.scenes[currentIdx] = data.scene;
-  msg.className = 'msg show ok';
-  msg.textContent = '✓ تم تطبيق المصدر';
-  renderAll();
-  toast('تم تطبيق المصدر بنجاح', 'ok');
 }
 
 async function proceed() {
-  $('overlay').classList.add('show');
-  await fetch('/api/proceed', { method: 'POST' });
+  $('overlay').classList.add(
+    'show'
+  );
+
+  try {
+
+    await fetch(
+      '/api/proceed',
+      {
+        method: 'POST',
+      }
+    );
+
+  } catch (err) {
+
+    console.error(err);
+  }
 }
 
 // ═══════════════════════════════════════════════════
-// Modal
+// Custom URL Modal
 // ═══════════════════════════════════════════════════
+
 function openModal() {
-  $('modal').classList.add('show');
-  setTimeout(() => $('modalInput').focus(), 80);
+  $('modal')
+    .classList.add('show');
+
+  setTimeout(
+    () => $('modalInput').focus(),
+    80
+  );
 }
+
 function closeModal() {
-  $('modal').classList.remove('show');
+  $('modal')
+    .classList.remove('show');
+
   $('modalInput').value = '';
 }
-$('modalCancel').onclick = closeModal;
-$('modalConfirm').onclick = () => {
-  const url = $('modalInput').value.trim();
-  if (!url) return;
-  closeModal();
-  const s = state.scenes[currentIdx];
-  fetch(`/api/scene/${s.id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ asset_url: url }),
-  }).then(async r => {
-    const data = await r.json();
-    if (r.ok) {
-      state.scenes[currentIdx] = data.scene;
-      renderAll();
-      toast('تم تطبيق المصدر بنجاح', 'ok');
-    } else {
-      toast(data.error || 'فشل التنزيل', 'err');
+
+$('modalCancel').onclick =
+  closeModal;
+
+$('modalConfirm').onclick =
+  () => {
+
+    const url =
+      $('modalInput')
+        .value
+        .trim();
+
+    if (!url) return;
+
+    closeModal();
+
+    const s =
+      getCurrentScene();
+
+    if (!s) return;
+
+    fetch(
+      `/api/scene/${s.id}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type':
+            'application/json',
+        },
+        body: JSON.stringify({
+          asset_url: url,
+        }),
+      }
+    )
+      .then(async r => {
+
+        const data =
+          await r.json();
+
+        if (r.ok) {
+
+          state.scenes[currentIdx] =
+            data.scene;
+
+          renderAll();
+
+          toast(
+            'تم تطبيق المصدر بنجاح',
+            'ok'
+          );
+
+        } else {
+
+          toast(
+            data.error ||
+            'فشل التنزيل',
+            'err'
+          );
+        }
+      })
+      .catch(err => {
+
+        console.error(err);
+
+        toast(
+          'فشل الاتصال بالخادم',
+          'err'
+        );
+      });
+  };
+
+$('modalInput')
+  .addEventListener(
+    'keydown',
+    e => {
+
+      if (
+        e.key === 'Enter'
+      ) {
+        $('modalConfirm').click();
+      }
     }
-  });
-};
-$('modalInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') $('modalConfirm').click();
-});
+  );
+
+// ═══════════════════════════════════════════════════
+// Graphic Modal Events
+// ═══════════════════════════════════════════════════
+
+$('createGraphicCancel').onclick =
+  closeGraphicModal;
+
+$('createGraphicConfirm').onclick =
+  createGraphic;
+
+$('graphicTemplateSelect')
+  .addEventListener(
+    'change',
+    renderGraphicForm
+  );
+
+$('graphicModal')
+  .addEventListener(
+    'click',
+    e => {
+
+      if (
+        e.target ===
+        $('graphicModal')
+      ) {
+        closeGraphicModal();
+      }
+    }
+  );
+
+// ═══════════════════════════════════════════════════
+// Close custom modal by outside click
+// ═══════════════════════════════════════════════════
+
+$('modal')
+  .addEventListener(
+    'click',
+    e => {
+
+      if (
+        e.target ===
+        $('modal')
+      ) {
+        closeModal();
+      }
+    }
+  );
 
 // ═══════════════════════════════════════════════════
 // Countdown
 // ═══════════════════════════════════════════════════
+
 setInterval(() => {
+
   if (!timeoutAt) return;
-  const left = Math.max(0, Math.floor((timeoutAt - Date.now()) / 1000));
-  $('countdown').textContent = fmt(left);
+
+  const left =
+    Math.max(
+      0,
+      Math.floor(
+        (timeoutAt -
+          Date.now()) /
+          1000
+      )
+    );
+
+  $('countdown')
+    .textContent =
+      fmt(left);
+
   if (left === 0) {
-    $('overlayTitle').textContent = 'انتهى الوقت';
-    $('overlayMsg').textContent = 'جارٍ المتابعة بما هو محدد حالياً.';
-    $('overlay').classList.add('show');
+
+    $('overlayTitle')
+      .textContent =
+        'انتهى الوقت';
+
+    $('overlayMsg')
+      .textContent =
+        'جارٍ المتابعة بما هو محدد حالياً.';
+
+    $('overlay')
+      .classList.add('show');
   }
+
 }, 1000);
 
 // ═══════════════════════════════════════════════════
 // Keyboard
 // ═══════════════════════════════════════════════════
-document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
-  if (e.key === 'ArrowLeft')  goTo(currentIdx + 1);
-  if (e.key === 'ArrowRight') goTo(currentIdx - 1);
-  if (e.key === 'Escape')     closeModal();
-});
 
-// ═══════════════════════════════════════════════════
-// Init
-// ═══════════════════════════════════════════════════
-$('proceedBtn').onclick = proceed;
-$('playBtn').onclick = () => {
-  const v = document.querySelector('#stageInner video');
-  if (v) v.paused ? v.play() : v.pause();
-};
+document.addEventListener(
+  'keydown',
+  e => {
 
-// Fit toggle — per-scene, now triggers re-render so dragging activates
-$('fitToggle').onclick = async () => {
-  const s = state.scenes[currentIdx];
-  if (!s) return;
+    const tag =
+      e.target?.tagName;
 
-  const newMode = (s.fit_mode === 'cover') ? 'contain' : 'cover';
-  s.fit_mode = newMode;
+    if (
+      tag === 'INPUT' ||
+      tag === 'TEXTAREA' ||
+      tag === 'SELECT'
+    ) {
+      return;
+    }
 
-  // First time entering cover mode, show the drag hint
-  if (newMode === 'cover') showDragHint();
+    if (
+      e.key === 'ArrowLeft'
+    ) {
+      goTo(currentIdx + 1);
+    }
 
-  renderStage();
+    if (
+      e.key === 'ArrowRight'
+    ) {
+      goTo(currentIdx - 1);
+    }
 
-  const r = await fetch(`/api/scene/${s.id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fit_mode: newMode }),
-  });
-  if (!r.ok) {
-    toast('فشل حفظ الإعداد', 'err');
-    s.fit_mode = (newMode === 'cover') ? 'contain' : 'cover';
-    renderStage();
+    if (
+      e.key === 'Escape'
+    ) {
+
+      if (
+        $('graphicModal')
+          .classList.contains('show')
+      ) {
+        closeGraphicModal();
+        return;
+      }
+
+      closeModal();
+    }
   }
-};
+);
+
+// ═══════════════════════════════════════════════════
+// Init buttons
+// ═══════════════════════════════════════════════════
+
+$('proceedBtn').onclick =
+  proceed;
+
+$('playBtn').onclick =
+  () => {
+
+    const v =
+      document.querySelector(
+        '#stageInner video'
+      );
+
+    if (!v) return;
+
+    if (v.paused) {
+
+      v.play().catch(
+        () => {}
+      );
+
+    } else {
+
+      v.pause();
+    }
+  };
+
+// ═══════════════════════════════════════════════════
+// Progress bar seeking
+// ═══════════════════════════════════════════════════
+
+$('progressBar').onclick =
+  (e) => {
+
+    const v =
+      document.querySelector(
+        '#stageInner video'
+      );
+
+    if (!v) return;
+
+    const rect =
+      e.currentTarget
+        .getBoundingClientRect();
+
+    const x =
+      e.clientX -
+      rect.left;
+
+    const pct =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          x / rect.width
+        )
+      );
+
+    if (
+      Number.isFinite(v.duration)
+    ) {
+
+      v.currentTime =
+        v.duration * pct;
+    }
+  };
+
+// ═══════════════════════════════════════════════════
+// Fullscreen
+// ═══════════════════════════════════════════════════
+
+$('fullscreenBtn').onclick =
+  async () => {
+
+    const stage =
+      $('stageInner');
+
+    try {
+
+      if (
+        document.fullscreenElement
+      ) {
+
+        await document.exitFullscreen();
+
+      } else {
+
+        await stage.requestFullscreen();
+      }
+
+    } catch (_) {}
+  };
+
+// ═══════════════════════════════════════════════════
+// Fit toggle
+// ═══════════════════════════════════════════════════
+
+$('fitToggle').onclick =
+  async () => {
+
+    const s =
+      getCurrentScene();
+
+    if (!s) return;
+
+    const newMode =
+      s.fit_mode === 'cover'
+        ? 'contain'
+        : 'cover';
+
+    s.fit_mode =
+      newMode;
+
+    if (
+      newMode === 'cover'
+    ) {
+      showDragHint();
+    }
+
+    renderStage();
+
+    try {
+
+      const r =
+        await fetch(
+          `/api/scene/${s.id}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+            body: JSON.stringify({
+              fit_mode:
+                newMode,
+            }),
+          }
+        );
+
+      if (!r.ok) {
+        throw new Error(
+          'Failed to save fit mode'
+        );
+      }
+
+    } catch (err) {
+
+      toast(
+        'فشل حفظ الإعداد',
+        'err'
+      );
+
+      s.fit_mode =
+        newMode === 'cover'
+          ? 'contain'
+          : 'cover';
+
+      renderStage();
+    }
+  };
 
 function showDragHint() {
-  const inner = $('stageInner');
-  if (inner.querySelector('.drag-hint')) return;
-  const h = document.createElement('div');
-  h.className = 'drag-hint';
-  h.textContent = 'اسحب الصورة لتحريك الإطار — انقر مرتين للتوسيط';
+  const inner =
+    $('stageInner');
+
+  if (
+    inner.querySelector(
+      '.drag-hint'
+    )
+  ) {
+    return;
+  }
+
+  const h =
+    document.createElement(
+      'div'
+    );
+
+  h.className =
+    'drag-hint';
+
+  h.textContent =
+    'اسحب الصورة لتحريك الإطار — انقر مرتين للتوسيط';
+
   inner.appendChild(h);
-  requestAnimationFrame(() => h.classList.add('show'));
+
+  requestAnimationFrame(
+    () =>
+      h.classList.add('show')
+  );
+
   setTimeout(() => {
-    h.classList.remove('show');
-    setTimeout(() => h.remove(), 300);
+
+    h.classList.remove(
+      'show'
+    );
+
+    setTimeout(
+      () => h.remove(),
+      300
+    );
+
   }, 3200);
 }
 
+// ═══════════════════════════════════════════════════
+// Start
+// ═══════════════════════════════════════════════════
+
 loadState();
+
+loadGraphicTemplates();
+
 </script>
+
 </body>
 </html>

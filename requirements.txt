@@ -7,3 +7,4 @@ mlx-whisper>=0.4.0
 pinterest-dl>=0.3.2
 flask>=3.0.0
 google-genai>=1.0.0
+sqlite-vec>=0.1.6
