@@ -3,24 +3,29 @@
 Detects scenes marked as quran/hadith/poetry/dua and applies a
 mosque-acoustic / echo effect to those segments while leaving
 regular narration untouched.
+
+Audio segments are kept aligned to their original timeline.
 """
+
 from config import (
-    DUCK_THRESHOLD, DUCK_RATIO, DUCK_ATTACK, DUCK_RELEASE,
-    BG_MUSIC_VOLUME, NASHEED_VOLUME,
+    DUCK_THRESHOLD,
+    DUCK_RATIO,
+    DUCK_ATTACK,
+    DUCK_RELEASE,
+    BG_MUSIC_VOLUME,
+    NASHEED_VOLUME,
 )
+
 from models.types import Scene, ImportantMoment
 from utils.logger import log
 
 
-# Per-content-type effects.
-# Each value is a filter chain applied AFTER atrim/asetpts.
-# aecho: in_gain:out_gain:delays|delays:decays|decays
 CONTENT_TYPE_EFFECTS: dict[str, str | None] = {
-    "narration": None,   # pass-through
-    "quran":     "aecho=0.65:0.85:120|240:0.35|0.20,volume=0.90",
-    "hadith":    "aecho=0.65:0.85:90|180:0.30|0.15,volume=0.92",
-    "poetry":    "aecho=0.70:0.90:50|100|150:0.30|0.20|0.10,volume=0.95",
-    "dua":       "aecho=0.55:0.80:200|400:0.40|0.25,volume=0.85",
+    "narration": None,
+    "quran": "aecho=0.65:0.85:120|240:0.35|0.20,volume=0.90",
+    "hadith": "aecho=0.65:0.85:90|180:0.30|0.15,volume=0.92",
+    "poetry": "aecho=0.70:0.90:50|100|150:0.30|0.20|0.10,volume=0.95",
+    "dua": "aecho=0.55:0.80:200|400:0.40|0.25,volume=0.85",
 }
 
 
@@ -30,129 +35,205 @@ def build_filter(
     has_bg_music: bool = False,
     has_nasheed: bool = False,
 ) -> str:
-    """
-    Build the complete audio filter.
+    """Build the complete final audio filter graph."""
 
-    Inputs (in the final mux):
-      [0:v]  = concatenated video
-      [1:a]  = original narration (full recording audio)
-      [2:a]  = bg_music (if has_bg_music)
-      [3:a]  = nasheed (if has_nasheed)
-
-    Output:
-      [aout] = final mixed audio
-    """
     scenes = scenes or []
     important_moments = important_moments or []
+
     filters: list[str] = []
 
-    # ── 1. Split narration into scene-aligned segments and apply effects
-    narration_label = _build_scene_audio_chain(scenes, filters)
+    narration_label = _build_scene_audio_chain(
+        scenes,
+        filters,
+    )
 
-    # ── 2. Duck background music under the narration
     current = narration_label
     next_input = 2
 
+    # Background music with narration-driven ducking.
     if has_bg_music:
-        filters.append(f"[{next_input}:a]volume={BG_MUSIC_VOLUME}[music]")
         filters.append(
-            f"[music][{current}]sidechaincompress="
-            f"threshold={DUCK_THRESHOLD}:ratio={DUCK_RATIO}:"
-            f"attack={DUCK_ATTACK}:release={DUCK_RELEASE}[music_ducked]"
+            f"[{next_input}:a]"
+            f"volume={BG_MUSIC_VOLUME}[music]"
         )
+
+        filters.append(
+            f"[music][{current}]"
+            f"sidechaincompress="
+            f"threshold={DUCK_THRESHOLD}:"
+            f"ratio={DUCK_RATIO}:"
+            f"attack={DUCK_ATTACK}:"
+            f"release={DUCK_RELEASE}"
+            f"[music_ducked]"
+        )
+
         filters.append(
             f"[{current}][music_ducked]"
-            f"amix=inputs=2:duration=first:normalize=0[mixed]"
+            f"amix=inputs=2:duration=first:normalize=0"
+            f"[mixed]"
         )
+
         current = "mixed"
         next_input += 1
 
-    # ── 3. Mix in nasheed for حماسه moments (less ducked)
+    # Nasheed.
     if has_nasheed:
-        filters.append(f"[{next_input}:a]volume={NASHEED_VOLUME}[nasheed]")
+        filters.append(
+            f"[{next_input}:a]"
+            f"volume={NASHEED_VOLUME}[nasheed]"
+        )
+
         filters.append(
             f"[{current}][nasheed]"
-            f"amix=inputs=2:duration=first:normalize=0[mixed2]"
+            f"amix=inputs=2:duration=first:normalize=0"
+            f"[mixed2]"
         )
+
         current = "mixed2"
 
-    # ── 4. Tag important moments (for future per-timestamp effects)
     if important_moments:
-        log.info(f"Audio: {len(important_moments)} important moment(s) "
-                 f"(echo injection is a future upgrade)")
+        log.info(
+            f"Audio: {len(important_moments)} important moment(s)"
+        )
 
-    filters.append(f"[{current}]anull[aout]")
+    filters.append(
+        f"[{current}]anull[aout]"
+    )
+
     return ";".join(filters)
 
 
-def _build_scene_audio_chain(scenes: list[Scene],
-                              filters: list[str]) -> str:
-    """
-    Split [1:a] (narration) into scene-timed segments, apply per-type
-    effects to special ones, concatenate back to a single stream.
+def _build_scene_audio_chain(
+    scenes: list[Scene],
+    filters: list[str],
+) -> str:
+    """Build scene-aligned narration segments."""
 
-    Returns the label of the resulting stream (without brackets).
-    """
     if not scenes:
-        filters.append("[1:a]anull[narr]")
+        filters.append(
+            "[1:a]anull[narr]"
+        )
         return "narr"
 
-    sorted_scenes = sorted(scenes, key=lambda s: s.start)
+    sorted_scenes = sorted(
+        scenes,
+        key=lambda scene: scene.start,
+    )
 
-    # Build segments, filling gaps with pass-through narration
     segments: list[tuple[float, float, str | None]] = []
+
     prev_end = 0.0
 
     for scene in sorted_scenes:
-        # Gap before this scene
-        if scene.start > prev_end + 0.01:
-            segments.append((prev_end, scene.start, None))
+        start = max(float(scene.start), 0.0)
+        end = max(float(scene.end), start)
 
-        # Safe attribute access — Scene always has content_type now,
-        # but this guards against older pickled scenes or edge cases.
-        ctype = getattr(scene, "content_type", "narration") or "narration"
-        effect = CONTENT_TYPE_EFFECTS.get(ctype)
+        if end <= start:
+            continue
 
-        segments.append((scene.start, scene.end, effect))
-        prev_end = max(prev_end, scene.end)
+        # Preserve narration in gaps.
+        if start > prev_end + 0.01:
+            segments.append(
+                (prev_end, start, None)
+            )
 
-    # If nothing is special, skip the split/rebuild entirely
-    if not any(effect for _, _, effect in segments):
-        log.info("Audio: no quran/hadith/poetry/dua scenes — narration passes through")
-        filters.append("[1:a]anull[narr]")
+        content_type = (
+            getattr(scene, "content_type", "narration")
+            or "narration"
+        )
+
+        effect = CONTENT_TYPE_EFFECTS.get(
+            content_type
+        )
+
+        # Handle overlapping scene boundaries safely.
+        start = max(start, prev_end)
+
+        if end > start:
+            segments.append(
+                (start, end, effect)
+            )
+
+        prev_end = max(prev_end, end)
+
+    if not segments:
+        filters.append(
+            "[1:a]anull[narr]"
+        )
         return "narr"
 
-    special = sum(1 for _, _, e in segments if e)
-    log.info(f"Audio: {special} special segment(s), "
-             f"{len(segments) - special} narration segment(s)")
+    if not any(effect for _, _, effect in segments):
+        log.info(
+            "Audio: no special content effects — narration passes through"
+        )
+
+        filters.append(
+            "[1:a]anull[narr]"
+        )
+
+        return "narr"
+
+    special_count = sum(
+        1 for _, _, effect in segments if effect
+    )
+
+    log.info(
+        f"Audio: {special_count} special segment(s), "
+        f"{len(segments) - special_count} regular segment(s)"
+    )
 
     labels: list[str] = []
 
     for i, (start, end, effect) in enumerate(segments):
         duration = end - start
+
         if duration <= 0.01:
             continue
 
         seg_label = f"seg{i}"
         proc_label = f"proc{i}"
 
+        # Extract original narration at the exact timeline position.
         filters.append(
-            f"[1:a]atrim=start={start:.3f}:end={end:.3f},"
-            f"asetpts=PTS-STARTPTS[{seg_label}]"
+            f"[1:a]"
+            f"atrim=start={start:.6f}:end={end:.6f},"
+            f"asetpts=PTS-STARTPTS"
+            f"[{seg_label}]"
         )
 
         if effect:
-            filters.append(f"[{seg_label}]{effect}[{proc_label}]")
+            # Apply the effect, then constrain the output to the
+            # original scene duration so echo tails cannot shift
+            # the next narration segment.
+            filters.append(
+                f"[{seg_label}]"
+                f"{effect},"
+                f"atrim=duration={duration:.6f},"
+                f"asetpts=PTS-STARTPTS"
+                f"[{proc_label}]"
+            )
         else:
-            filters.append(f"[{seg_label}]anull[{proc_label}]")
+            filters.append(
+                f"[{seg_label}]"
+                f"atrim=duration={duration:.6f},"
+                f"asetpts=PTS-STARTPTS"
+                f"[{proc_label}]"
+            )
 
-        labels.append(f"[{proc_label}]")
+        labels.append(
+            f"[{proc_label}]"
+        )
 
     if not labels:
-        filters.append("[1:a]anull[narr]")
+        filters.append(
+            "[1:a]anull[narr]"
+        )
         return "narr"
 
     filters.append(
-        f"{''.join(labels)}concat=n={len(labels)}:v=0:a=1[narr]"
+        f"{''.join(labels)}"
+        f"concat=n={len(labels)}:v=0:a=1"
+        f"[narr]"
     )
+
     return "narr"
