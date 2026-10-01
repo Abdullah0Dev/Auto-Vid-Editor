@@ -22,7 +22,7 @@ mlx_model/
 # ─────────────────────────────────────────────
 input/
 !input/.gitkeep
-
+cache/*
 # ─────────────────────────────────────────────
 # AUDIO / VIDEO ASSETS — bg music, nasheed
 # These are copyrighted or large
